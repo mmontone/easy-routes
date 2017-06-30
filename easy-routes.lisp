@@ -75,29 +75,37 @@
 
 (defmacro defroute (name template-and-options &body body)
   (let* ((template (if (listp template-and-options)
-		       (first template-and-options)
-		       template-and-options))
-	 (variables (routes:template-variables
-		     (routes:parse-template template)))
-	 (arglist (mapcar (alexandria:compose #'intern #'symbol-name)
-			  variables))
-	 (method (or (and (listp template-and-options)
-			  (getf (rest template-and-options) :method))
-		     :get))
-	 #+nil(content-type (and (listp template-and-options)
-				 (getf (rest template-and-options) :content-type)))
-	 (decorators (and (listp template-and-options)
-			  (getf (rest template-and-options) :decorators)))
-	 (route (make-instance 'route
-			       :symbol name
-			       :template (routes:parse-template template)
-			       :variables variables
-			       :required-method method
-			       :decorators decorators)))
+                       (first template-and-options)
+                       template-and-options))
+         (variables (routes:template-variables
+                     (routes:parse-template template)))
+         (arglist (mapcar (alexandria:compose #'intern #'symbol-name)
+                          variables))
+         (method (or (and (listp template-and-options)
+                          (getf (rest template-and-options) :method))
+                     :get))
+         #+nil(content-type (and (listp template-and-options)
+                                 (getf (rest template-and-options) :content-type)))
+         (decorators (and (listp template-and-options)
+                          (getf (rest template-and-options) :decorators)))
+         (route-options (and (listp template-and-options)
+                             (rest template-and-options)))
+         (route (make-instance 'route
+                               :symbol name
+                               :template (routes:parse-template template)
+                               :variables variables
+                               :required-method method
+                               :decorators decorators)))
     (setf (gethash name *routes*) route)
     (connect-routes)
     `(defun ,name ,arglist
-       ,@body)))
+       (let (,@(loop for param in (getf route-options :params)
+                  collect `(,param (hunchentoot:parameter ,(string-downcase (string param)))))
+             ,@(loop for param in (getf route-options :get-params)
+                  collect `(,param (hunchentoot:get-parameter ,(string-downcase (string param)))))
+               ,@(loop for param in (getf route-options :post-params)
+                    collect `(,param (hunchentoot:post-parameter ,(string-downcase (string param))))))
+         ,@body))))
 
 ;; Decorators
 
