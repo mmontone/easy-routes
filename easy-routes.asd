@@ -4,5 +4,6 @@
   :license "MIT"
   :serial t
   :components ((:file "package")
+               (:file "util")
                (:file "easy-routes"))
   :depends-on (:hunchentoot :routes))

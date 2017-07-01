@@ -12,42 +12,42 @@
 
 (defun routes-dispatch-request (acceptor request)
   (flet ((not-found-if-null (thing)
-             (unless thing
-               (setf (hunchentoot:return-code*)
-                     hunchentoot:+http-not-found+)
-               (hunchentoot:abort-request-handler))))
+           (unless thing
+             (setf (hunchentoot:return-code*)
+                   hunchentoot:+http-not-found+)
+             (hunchentoot:abort-request-handler))))
     (multiple-value-bind (route bindings)
-	(routes:match *routes-mapper*
-	  (hunchentoot:request-uri request))
-        (not-found-if-null route)
-        (handler-bind ((error #'hunchentoot:maybe-invoke-debugger))
-          (let ((result (process-route route bindings)))
-            (cond
-              ((pathnamep result)
-               (hunchentoot:handle-static-file
-                result
-                (or (hunchentoot:mime-type result)
-                    (hunchentoot:content-type hunchentoot:*reply*))))
-              (t result)))))))
+        (routes:match *routes-mapper*
+          (hunchentoot:request-uri request))
+      (not-found-if-null route)
+      (handler-bind ((error #'hunchentoot:maybe-invoke-debugger))
+        (let ((result (process-route route bindings)))
+          (cond
+            ((pathnamep result)
+             (hunchentoot:handle-static-file
+              result
+              (or (hunchentoot:mime-type result)
+                  (hunchentoot:content-type hunchentoot:*reply*))))
+            (t result)))))))
 
 (defclass route (routes:route)
   ((symbol :initarg :symbol
-	   :reader route-symbol)
+           :reader route-symbol)
    (variables :initarg :variables
-	      :reader variables)
+              :reader variables)
    (required-method :initarg :required-method
-		    :initform nil
+                    :initform nil
                     :reader required-method)
    (decorators :initarg :decorators
-	       :initform nil
-	       :reader route-decorators
-	       :type list)))
+               :initform nil
+               :reader route-decorators
+               :type list)))
 
 (defmethod routes:route-check-conditions ((route route) bindings)
   (with-slots (required-method) route
     (and required-method
-	 (eql (hunchentoot:request-method*) required-method)
-	 t)))
+         (eql (hunchentoot:request-method*) required-method)
+         t)))
 
 (defmethod routes:route-name ((route route))
   (string-downcase (write-to-string (slot-value route 'symbol))))
@@ -56,24 +56,24 @@
   (if (null decorators)
       (funcall function)
       (funcall (first decorators)
-	       (lambda ()
-		 (call-with-decorators (rest decorators) function)))))
+               (lambda ()
+                 (call-with-decorators (rest decorators) function)))))
 
 (defmethod process-route ((route route) bindings)
   (call-with-decorators (route-decorators route)
-			(lambda ()
-			  (apply (route-symbol route)
-				 (loop for item in (slot-value route 'variables)
-				       collect (cdr (assoc item bindings
-							   :test #'string=)))))))
+                        (lambda ()
+                          (apply (route-symbol route)
+                                 (loop for item in (slot-value route 'variables)
+                                    collect (cdr (assoc item bindings
+                                                        :test #'string=)))))))
 
 (defun connect-routes ()
   (routes:reset-mapper *routes-mapper*)
   (loop for route being the hash-values of *routes*
-	do
-	   (routes:connect *routes-mapper* route)))
+     do
+       (routes:connect *routes-mapper* route)))
 
-(defmacro defroute (name template-and-options &body body)
+(defmacro defroute (name template-and-options params &body body)
   (let* ((template (if (listp template-and-options)
                        (first template-and-options)
                        template-and-options))
@@ -84,12 +84,8 @@
          (method (or (and (listp template-and-options)
                           (getf (rest template-and-options) :method))
                      :get))
-         #+nil(content-type (and (listp template-and-options)
-                                 (getf (rest template-and-options) :content-type)))
          (decorators (and (listp template-and-options)
                           (getf (rest template-and-options) :decorators)))
-         (route-options (and (listp template-and-options)
-                             (rest template-and-options)))
          (route (make-instance 'route
                                :symbol name
                                :template (routes:parse-template template)
@@ -98,14 +94,18 @@
                                :decorators decorators)))
     (setf (gethash name *routes*) route)
     (connect-routes)
-    `(defun ,name ,arglist
-       (let (,@(loop for param in (getf route-options :params)
-                  collect `(,param (hunchentoot:parameter ,(string-downcase (string param)))))
-             ,@(loop for param in (getf route-options :get-params)
-                  collect `(,param (hunchentoot:get-parameter ,(string-downcase (string param)))))
-               ,@(loop for param in (getf route-options :post-params)
-                    collect `(,param (hunchentoot:post-parameter ,(string-downcase (string param))))))
-         ,@body))))
+    (assoc-bind ((params nil)
+                 (get-params :&get)
+                 (post-params :&post))
+        (lambda-list-split '(:&get :&post) params)
+      `(defun ,name ,arglist
+         (let (,@(loop for param in params
+                    collect `(,param (hunchentoot:parameter ,(string-downcase (string param)))))
+               ,@(loop for param in get-params
+                    collect `(,param (hunchentoot:get-parameter ,(string-downcase (string param)))))
+                 ,@(loop for param in post-params
+                      collect `(,param (hunchentoot:post-parameter ,(string-downcase (string param))))))
+           ,@body)))))
 
 ;; Decorators
 
