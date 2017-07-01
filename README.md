@@ -58,8 +58,17 @@ with:
         ((y :real-name "Y" :init-form 22 :parameter-type 'integer))
       (format nil "~A - ~A" x y)) 
     ```
-
-Example route:
+    
+    You can also specify the type of path parameters after `&path`. For example, say you want to sum a path argument to a query argument. You can specify their type as 'INTEGER and do their some without parsing:
+    
+    ```lisp
+    (easy-routes:defroute foo "/foo/:x" 
+        ((y :init-form 10 :parameter-type 'integer) 
+            &path (x 'integer))
+                  (format nil "~A" (+ x y)))
+    ```
+    
+### Example route: ###
 
 ```lisp
 (defroute foo ("/foo/:arg1/:arg2" :method :get

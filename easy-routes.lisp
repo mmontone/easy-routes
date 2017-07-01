@@ -96,8 +96,9 @@
     (connect-routes)
     (assoc-bind ((params nil)
                  (get-params :&get)
-                 (post-params :&post))
-        (lambda-list-split '(:&get :&post) params)
+                 (post-params :&post)
+                 (path-params :&path))
+        (lambda-list-split '(:&get :&post :&path) params)
       `(defun ,name ,arglist
          (let (,@(loop for param in params
                     collect
@@ -107,7 +108,11 @@
                       (hunchentoot::make-defun-parameter param ''string :get))
                  ,@(loop for param in post-params
                       collect
-                        (hunchentoot::make-defun-parameter param ''string :post)))
+                        (hunchentoot::make-defun-parameter param ''string :post))
+                 ,@(loop for param in path-params
+                      collect
+                        (destructuring-bind (parameter-name parameter-type) param
+                        `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
            ,@body)))))
 
 ;; Decorators
