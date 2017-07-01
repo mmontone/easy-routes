@@ -6,9 +6,9 @@ It's just glue code for Restas routing subsystem (CL-ROUTES).
 
 It supports:
 
-    * Dispatch based on HTTP method
-    * Arguments extraction from the url path
-    * Decorators
+* Dispatch based on HTTP method
+* Arguments extraction from the url path
+* Decorators
 
 ## Usage: ##
 
@@ -30,9 +30,9 @@ Use `routes-acceptor` acceptor:
 
 Parameters in the url path are prefixed with a colon, and they are bound into the route body, so they are accessible from there. Also, there are options to grab parameters from the url query section after the question mark, and also post parameters.
 
-    * `:get-params <list of params>` - Grabs parameters from the url using `hunchentoot:get-parameter` function, and bounds them into the route body.
-    * `:post-params <list of params>` - Grabs parameters from the HTTP post body using `hunchentoot:post-parameter` function, and bounds them into the route body.
-    * `:params <list of params>` - Grabs either the "GET" or the "POST" params via `hunchentoot:post-parameter` function, and bounds them into the route body.
+* `:get-params <list of params>` - Grabs parameters from the url using `hunchentoot:get-parameter` function, and bounds them into the route body.
+* `:post-params <list of params>` - Grabs parameters from the HTTP post body using `hunchentoot:post-parameter` function, and bounds them into the route body.
+* `:params <list of params>` - Grabs either the "GET" or the "POST" params via `hunchentoot:post-parameter` function, and bounds them into the route body.
     
 #### Example: ####
 
