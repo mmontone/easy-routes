@@ -59,7 +59,7 @@ with:
       (format nil "~A - ~A" x y)) 
     ```
     
-    You can also specify the type of path parameters after `&path`. For example, say you want to sum a path argument to a query argument. You can specify their type as 'INTEGER and do their some without parsing:
+    You can also specify the type of path parameters after `&path`. For example, say you want to sum a path argument to a query argument. You can specify their type as 'INTEGER and calculate their sum without parsing:
     
     ```lisp
     (easy-routes:defroute foo "/foo/:x" 
