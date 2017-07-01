@@ -37,7 +37,7 @@ with:
      * `:method` - The HTTP method to dispatch. Either `:get` or `:post`.
      * `:decorators` - The decorators to attach (see below).
 * `route-params`: a list of params to be extracted from the url or HTTP request body (POST). 
-     Has this form: `(params &get get-params &post post-params)` where `params` are grabbed via `hunchentoot:parameter` function, `get-params` are grabbed via `hunchentoot:get-parameter` function, and `post-params` are grabbed via `hunchentoot:post-parameter` function.
+     Has this form: `(params &get get-params &post post-params)` where `params` are grabbed via `hunchentoot:parameter` function, `get-params` via `hunchentoot:get-parameter` function, and `post-params` via `hunchentoot:post-parameter` function.
         
     For example:
 
@@ -45,7 +45,20 @@ with:
     (easy-routes:defroute name ("/foo/:x") (y &get z)
         (format nil "x: ~a y: ~y z: ~a" x y z))
     ```
+    Also, params can have Hunchentoot easy-handler style options, described here: http://weitz.de/hunchentoot/#define-easy-handler
     
+    ```
+    (var &key real-name parameter-type init-form request-type)
+    ```
+       
+    For example:
+    
+    ```lisp
+    (easy-routes:defroute foo "/foo/:x" 
+        ((y :real-name "Y" :init-form 22 :parameter-type 'integer))
+      (format nil "~A - ~A" x y)) 
+    ```
+
 Example route:
 
 ```lisp

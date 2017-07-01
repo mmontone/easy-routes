@@ -100,11 +100,14 @@
         (lambda-list-split '(:&get :&post) params)
       `(defun ,name ,arglist
          (let (,@(loop for param in params
-                    collect `(,param (hunchentoot:parameter ,(string-downcase (string param)))))
+                    collect
+                      (hunchentoot::make-defun-parameter param ''string :both))
                ,@(loop for param in get-params
-                    collect `(,param (hunchentoot:get-parameter ,(string-downcase (string param)))))
+                    collect
+                      (hunchentoot::make-defun-parameter param ''string :get))
                  ,@(loop for param in post-params
-                      collect `(,param (hunchentoot:post-parameter ,(string-downcase (string param))))))
+                      collect
+                        (hunchentoot::make-defun-parameter param ''string :post)))
            ,@body)))))
 
 ;; Decorators
