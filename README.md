@@ -26,6 +26,19 @@ Use `routes-acceptor` acceptor:
     (format nil "<h1>FOO arg1: ~a arg2: ~a </h1>" arg1 arg2))
 ```
 
+### Parameters: ###
+
+Parameters in the url path are prefixed with a colon, and they are bound into the route body, so they are accessible from there. Also, there are options to grab parameters from the url query section after the question mark, and also post parameters.
+
+    * `:get-params <list of params>` - Grabs parameters from the url using `hunchentoot:get-parameter` function, and bounds them into the route body.
+    * `:post-params <list of params>` - Grabs parameters from the HTTP post body using `hunchentoot:post-parameter` function, and bounds them into the route body.
+    * `:params <list of params>` - Grabs either the "GET" or the "POST" params via `hunchentoot:post-parameter` function, and bounds them into the route body.
+    
+#### Example: ####
+
+(easy-routes:defroute name ("/foo/:x" :params (y) :get-params (z))
+           (format nil "x: ~a y: ~y z: ~a" x y z))
+
 ## Decorators: ##
 
 Decorators are functions that are executed before the route body. They should call the `next` parameter function to continue executing the decoration chain and the route body finally.
