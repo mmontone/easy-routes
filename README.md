@@ -20,25 +20,39 @@ Use `routes-acceptor` acceptor:
 
 ## Routes: ##
 
+### Syntax: ###
+
+```lisp
+
+(defroute <name> (<path> &rest <route-options>) <route-params> 
+   &body body)
+   
+```
+
+with:
+
+* `path`: A string with an url path that can contain arguments prefixed with a colon. 
+  Like `"/foo/:x/:y"`, where `:x` and `:y` are bound into x and y variables in the context of the route body.
+* `route-options`: possible options are
+     * `:method` - The HTTP method to dispatch. Either `:get` or `:post`.
+     * `:decorators` - The decorators to attach (see below).
+* `route-params`: a list of params to be extracted from the url or HTTP request body (POST). 
+     Has this form: `(params &get get-params &post post-params)` where `params` are grabbed via `hunchentoot:parameter` function, `get-params` are grabbed via `hunchentoot:get-parameter` function, and `post-params` are grabbed via `hunchentoot:post-parameter` function.
+        
+    For example:
+
+    ```lisp
+    (easy-routes:defroute name ("/foo/:x") (y &get z)
+        (format nil "x: ~a y: ~y z: ~a" x y z))
+    ```
+    
+Example route:
+
 ```lisp
 (defroute foo ("/foo/:arg1/:arg2" :method :get
                                   :decorators (@auth @db @html))
-    (format nil "<h1>FOO arg1: ~a arg2: ~a </h1>" arg1 arg2))
-```
-
-### Parameters: ###
-
-Parameters in the url path are prefixed with a colon, and they are bound into the route body, so they are accessible from there. Also, there are options to grab parameters from the url query section after the question mark, and also post parameters.
-
-* `:get-params <list of params>` - Grabs parameters from the url using `hunchentoot:get-parameter` function, and bounds them into the route body.
-* `:post-params <list of params>` - Grabs parameters from the HTTP post body using `hunchentoot:post-parameter` function, and bounds them into the route body.
-* `:params <list of params>` - Grabs either the "GET" or the "POST" params via `hunchentoot:post-parameter` function, and bounds them into the route body.
-    
-#### Example: ####
-
-```lisp
-(easy-routes:defroute name ("/foo/:x" :params (y) :get-params (z))
-           (format nil "x: ~a y: ~y z: ~a" x y z))
+   (&get w)
+    (format nil "<h1>FOO arg1: ~a arg2: ~a ~a</h1>" arg1 arg2 w))
 ```
 
 ## Decorators: ##
