@@ -36,8 +36,10 @@ Parameters in the url path are prefixed with a colon, and they are bound into th
     
 #### Example: ####
 
+```lisp
 (easy-routes:defroute name ("/foo/:x" :params (y) :get-params (z))
            (format nil "x: ~a y: ~y z: ~a" x y z))
+```
 
 ## Decorators: ##
 
