@@ -18,6 +18,8 @@ Use `routes-acceptor` acceptor:
 (hunchentoot:start (make-instance 'easy-routes:routes-acceptor))
 ```
 
+Note that the `routes-acceptor` returns with HTTP not found if no route matches and doesn't fallback to `easy-handlers`, and so it doesn't iterate over Hunchentoot `*dispatch-table*`. Most of the time, that iteration is a useful thing, so you may want to start the `easy-routes:easy-routes-acceptor` instead, that inherits from Hunchentoot `easy-acceptor` and so it iterates the dispatch table if no route matches (useful for being able to use `define-easy-handler` and also handling static files).
+
 ## Routes: ##
 
 ### Syntax: ###
@@ -37,7 +39,7 @@ with:
      * `:method` - The HTTP method to dispatch. Either `:get` or `:post`.
      * `:decorators` - The decorators to attach (see below).
 * `route-params`: a list of params to be extracted from the url or HTTP request body (POST). 
-     Has this form: `(params &get get-params &post post-params)` where `params` are grabbed via `hunchentoot:parameter` function, `get-params` via `hunchentoot:get-parameter` function, and `post-params` via `hunchentoot:post-parameter` function.
+     Has this form: `(params &get get-params &post post-params &path path-params)`, with the `&get`, `&post` and `&path` params sections being optional, and where `params` are grabbed via `hunchentoot:parameter` function, `get-params` via `hunchentoot:get-parameter` function, and `post-params` via `hunchentoot:post-parameter` function. `path-params` specifies the type of params in the url path (see below for an example).
         
     For example:
 
