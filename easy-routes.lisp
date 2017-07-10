@@ -4,13 +4,12 @@
 (defparameter *routes-mapper* (make-instance 'routes:mapper))
 
 (defclass routes-acceptor (hunchentoot:acceptor)
-  ())
+  ()
+  (:documentation "This acceptors handles routes and only routes. If no route is matched then an HTTP NOT FOUND error is returned.
+If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-ROUTES-ACCEPTOR"))
 
 (defmethod hunchentoot:acceptor-dispatch-request
     ((acceptor routes-acceptor) request)
-  (routes-dispatch-request acceptor request))
-
-(defun routes-dispatch-request (acceptor request)
   (flet ((not-found-if-null (thing)
            (unless thing
              (setf (hunchentoot:return-code*)
@@ -29,6 +28,29 @@
               (or (hunchentoot:mime-type result)
                   (hunchentoot:content-type hunchentoot:*reply*))))
             (t result)))))))
+
+(defclass easy-routes-acceptor (hunchentoot:easy-acceptor)
+  ()
+  (:documentation "This acceptor tries to match and handle easy-routes first, but fallbacks to easy-routes dispatcher if there's no matching"))
+
+(defmethod hunchentoot:acceptor-dispatch-request
+    ((acceptor easy-routes-acceptor) request)
+  (multiple-value-bind (route bindings)
+      (routes:match *routes-mapper*
+        (hunchentoot:request-uri request))
+    (if (not route)
+        ;; Fallback to dispatch via easy-handlers
+        (call-next-method)
+        ;; else, a route was matched
+        (handler-bind ((error #'hunchentoot:maybe-invoke-debugger))
+           (let ((result (process-route route bindings)))
+             (cond
+               ((pathnamep result)
+                (hunchentoot:handle-static-file
+                 result
+                 (or (hunchentoot:mime-type result)
+                     (hunchentoot:content-type hunchentoot:*reply*))))
+               (t result)))))))
 
 (defclass route (routes:route)
   ((symbol :initarg :symbol

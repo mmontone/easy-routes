@@ -3,6 +3,7 @@
   (:export
    ;; Hunchentoot acceptor
    #:routes-acceptor
+   #:easy-routes-acceptor
    ;; Routes definition
    #:defroute
    ;; Decorators
