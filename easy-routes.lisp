@@ -65,6 +65,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                :reader route-decorators
                :type list)))
 
+(defmethod print-object ((route route) stream)
+  (print-unreadable-object (route stream :type t :identity t)
+    (with-slots (symbol required-method routes::template) route 
+      (format stream "~A: ~A ~S" symbol required-method routes::template))))
+            
 (defmethod routes:route-check-conditions ((route route) bindings)
   (with-slots (required-method) route
     (and required-method
@@ -136,6 +141,80 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                         (destructuring-bind (parameter-name parameter-type) param
                         `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
            ,@body)))))
+
+(defun find-route (name)
+  (gethash name *routes*))
+
+;; Code here is copied almost exactly from restas library by Moskvitin Andrey
+
+;; Url generation from route name
+
+(defun route-symbol-template (route-symbol)
+  (routes:parse-template (find-route route-symbol)))
+
+(defmethod make-route-url ((tmpl list) args)
+  (let* ((uri (make-instance 'puri:uri))
+         (bindings (loop for rest on args by #'cddr
+                         for key = (first rest)
+                         for value = (second rest)
+                         collect
+                             (cons key
+                                   (if (or (stringp value) (consp value))
+                                       value
+                                       (write-to-string value)))))
+         (query-part (set-difference bindings
+                                     (routes:template-variables tmpl)
+                                     :test (alexandria:named-lambda
+                                               known-variable-p (pair var)
+                                             (eql (car pair) var)))))
+    (setf (puri:uri-parsed-path uri)
+          (cons :absolute
+                (routes::apply-bindings tmpl bindings)))
+    (when query-part
+      (setf (puri:uri-query uri)
+            (format nil
+                    "~{~(~A~)=~A~^&~}"
+                    (alexandria:flatten query-part))))
+    uri))
+
+(defmethod make-route-url ((route symbol) args)
+  (make-route-url (or (find-route route)
+                      (error "Unknown route: ~A" route)) args))
+
+(defmethod make-route-url ((route route) args)
+  (make-route-url (routes:route-template route) args))
+
+(defun genurl (route-symbol &rest args &key &allow-other-keys)
+  (puri:render-uri (make-route-url route-symbol args) nil))
+
+(defun genurl* (route-symbol &rest args &key &allow-other-keys)
+  (let ((url (make-route-url route-symbol args)))
+    (setf (puri:uri-scheme url) :http
+          (puri:uri-host url) (if (boundp 'hunchentoot:*request*)
+                                  (hunchentoot:host)
+                                  "localhost"))
+    (puri:render-uri url nil)))
+
+;; Redirect
+
+(defun apply-format-aux (format args)
+  (if (symbolp format)
+      (apply #'genurl format args)
+      (if args
+          (apply #'format nil (cons format args))
+          format)))
+
+(defun redirect (route-symbol &rest args)
+  (hunchentoot:redirect
+   (hunchentoot:url-decode
+    (apply-format-aux route-symbol
+                      (mapcar #'(lambda (s)
+                                  (if (stringp s)
+                                      (hunchentoot:url-encode s)
+                                      s))
+                              args)))))
+
+;; Copied code ends here  
 
 ;; Decorators
 
