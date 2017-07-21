@@ -101,6 +101,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
        (routes:connect *routes-mapper* route)))
 
 (defmacro defroute (name template-and-options params &body body)
+  "Route definition syntax"  
   (let* ((template (if (listp template-and-options)
                        (first template-and-options)
                        template-and-options))
@@ -143,6 +144,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
            ,@body)))))
 
 (defun find-route (name)
+  "Find a route by name (symbol)"
   (gethash name *routes*))
 
 ;; Code here is copied almost exactly from restas library by Moskvitin Andrey
@@ -185,9 +187,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   (make-route-url (routes:route-template route) args))
 
 (defun genurl (route-symbol &rest args &key &allow-other-keys)
+  "Generate a relative url from a route name and arguments"
   (puri:render-uri (make-route-url route-symbol args) nil))
 
 (defun genurl* (route-symbol &rest args &key &allow-other-keys)
+  "Generate an absolute url from a route name and arguments"
   (let ((url (make-route-url route-symbol args)))
     (setf (puri:uri-scheme url) :http
           (puri:uri-host url) (if (boundp 'hunchentoot:*request*)
@@ -205,6 +209,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
           format)))
 
 (defun redirect (route-symbol &rest args)
+  "Redirect to a route url. Pass the route name and the parameters."
   (hunchentoot:redirect
    (hunchentoot:url-decode
     (apply-format-aux route-symbol
@@ -219,9 +224,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 ;; Decorators
 
 (defun @html (next)
+  "HTML decoration. Sets reply content type to text/html"
   (setf (hunchentoot:content-type*) "text/html")
   (funcall next))
 
-(defun @json (next)
+(defun @json (next)1
+  "JSON decoration. Sets reply content type to application/json"
   (setf (hunchentoot:content-type*) "application/json")
   (funcall next))

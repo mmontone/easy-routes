@@ -104,3 +104,64 @@ Decorators are functions that are executed before the route body. They should ca
   (postmodern:with-connection *db-spec*
     (funcall next)))
 ```
+
+## Reference ##
+
+## Functions
+### @html
+
+```lisp
+(next)
+```
+
+HTML decoration. Sets reply content type to text/html
+
+### find-route
+
+```lisp
+(name)
+```
+
+Find a route by name (symbol)
+
+### genurl
+
+```lisp
+(route-symbol &rest args &key &allow-other-keys)
+```
+
+Generate a relative url from a route name and arguments
+
+### genurl\*
+
+```lisp
+(route-symbol &rest args &key &allow-other-keys)
+```
+
+Generate an absolute url from a route name and arguments
+
+### redirect
+
+```lisp
+(route-symbol &rest args)
+```
+Redirect to a route url. Pass the route name and the parameters.
+
+
+## Macros
+### defroute
+
+```lisp
+(name template-and-options params &body body)
+```
+
+Route definition syntax
+
+## Classes
+
+### easy-routes-acceptor
+This acceptor tries to match and handle easy-routes first, but fallbacks to easy-routes dispatcher if there's no matching
+
+### routes-acceptor
+This acceptors handles routes and only routes. If no route is matched then an HTTP NOT FOUND error is returned.
+If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-ROUTES-ACCEPTOR
