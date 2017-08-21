@@ -13,4 +13,7 @@
    #:redirect
    ;; Decorators
    #:@html
-   #:@json))
+   #:@json
+   ;; HTTP errors
+   #:or-http-error
+   #:or-http-not-found))

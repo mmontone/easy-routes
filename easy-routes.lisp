@@ -232,3 +232,14 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   "JSON decoration. Sets reply content type to application/json"
   (setf (hunchentoot:content-type*) "application/json")
   (funcall next))
+
+;; HTTP Errors
+
+(defun or-http-error (value http-error-code)
+  (or value
+      (progn
+        (setf (hunchentoot:return-code*) http-error-code)
+        (hunchentoot:abort-request-handler))))
+
+(defun or-http-not-found (value)
+  (or-http-error value hunchentoot:+http-not-found+))
