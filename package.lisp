@@ -15,5 +15,8 @@
    #:@html
    #:@json
    ;; HTTP errors
+   #:http-error
+   #:not-found-error
+   #:permission-denied-error
    #:or-http-error
-   #:or-http-not-found))
+   #:or-not-found))

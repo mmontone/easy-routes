@@ -235,11 +235,19 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 
 ;; HTTP Errors
 
-(defun or-http-error (value http-error-code)
-  (or value
-      (progn
-        (setf (hunchentoot:return-code*) http-error-code)
-        (hunchentoot:abort-request-handler))))
+(defun http-error (http-error)
+  (setf (hunchentoot:return-code*) http-error)
+  (hunchentoot:abort-request-handler))
 
-(defun or-http-not-found (value)
+(defun not-found-error ()
+  (http-error hunchentoot:+http-not-found+))
+
+(defun permission-denied-error ()
+  (http-error hunchentoot:+http-forbidden+))
+
+(defun or-http-error (value http-error)
+  (or value
+      (http-error http-error)))
+
+(defun or-not-found (value)
   (or-http-error value hunchentoot:+http-not-found+))
