@@ -79,10 +79,15 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 (defmethod routes:route-name ((route route))
   (string-downcase (write-to-string (slot-value route 'symbol))))
 
+(defun call-decorator (decorator next)
+  (if (listp decorator)
+      (apply (first decorator) (append (rest decorator) (list next)))
+      (funcall decorator next)))
+
 (defun call-with-decorators (decorators function)
   (if (null decorators)
       (funcall function)
-      (funcall (first decorators)
+      (call-decorator (first decorators)
                (lambda ()
                  (call-with-decorators (rest decorators) function)))))
 
@@ -232,6 +237,16 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   "JSON decoration. Sets reply content type to application/json"
   (setf (hunchentoot:content-type*) "application/json")
   (funcall next))
+
+(defun @check (predicate http-error next)
+  (if (funcall predicate)
+      (funcall next)
+      (http-error http-error)))
+
+(defun @check-permission (predicate next)
+  (if (funcall predicate)
+      (funcall next)
+      (permission-denied-error)))      
 
 ;; HTTP Errors
 

@@ -14,6 +14,8 @@
    ;; Decorators
    #:@html
    #:@json
+   #:@check
+   #:@check-permission
    ;; HTTP errors
    #:http-error
    #:not-found-error
