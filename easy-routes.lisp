@@ -228,7 +228,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   (setf (hunchentoot:content-type*) "text/html")
   (funcall next))
 
-(defun @json (next)1
+(defun @json (next)
   "JSON decoration. Sets reply content type to application/json"
   (setf (hunchentoot:content-type*) "application/json")
   (funcall next))
