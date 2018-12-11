@@ -105,8 +105,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
      do
        (routes:connect *routes-mapper* route)))
 
+(defmethod make-load-form ((var routes:variable-template) &optional env)
+  `(routes::make-variable-template ',(routes::template-data var)))
+
 (defmacro defroute (name template-and-options params &body body)
-  "Route definition syntax"  
+  "Route definition syntax"
   (let* ((template (if (listp template-and-options)
                        (first template-and-options)
                        template-and-options))
@@ -118,35 +121,35 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                           (getf (rest template-and-options) :method))
                      :get))
          (decorators (and (listp template-and-options)
-                          (getf (rest template-and-options) :decorators)))
-         (route (make-instance 'route
-                               :symbol name
-                               :template (routes:parse-template template)
-                               :variables variables
-                               :required-method method
-                               :decorators decorators)))
-    (setf (gethash name *routes*) route)
-    (connect-routes)
+                          (getf (rest template-and-options) :decorators))))
     (assoc-bind ((params nil)
                  (get-params :&get)
                  (post-params :&post)
                  (path-params :&path))
         (lambda-list-split '(:&get :&post :&path) params)
-      `(defun ,name ,arglist
-         (let (,@(loop for param in params
-                    collect
-                      (hunchentoot::make-defun-parameter param ''string :both))
-               ,@(loop for param in get-params
-                    collect
-                      (hunchentoot::make-defun-parameter param ''string :get))
-                 ,@(loop for param in post-params
+      `(let ((%route (make-instance 'route
+                                    :symbol ',name
+                                    :template ',(routes:parse-template template)
+                                    :variables ',variables
+                                    :required-method ',method
+                                    :decorators ',decorators)))
+         (setf (gethash ',name *routes*) %route)
+         (connect-routes)
+         (defun ,name ,arglist
+           (let (,@(loop for param in params
                       collect
-                        (hunchentoot::make-defun-parameter param ''string :post))
-                 ,@(loop for param in path-params
+                        (hunchentoot::make-defun-parameter param ''string :both))
+                 ,@(loop for param in get-params
                       collect
-                        (destructuring-bind (parameter-name parameter-type) param
-                        `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
-           ,@body)))))
+                        (hunchentoot::make-defun-parameter param ''string :get))
+                   ,@(loop for param in post-params
+                        collect
+                          (hunchentoot::make-defun-parameter param ''string :post))
+                   ,@(loop for param in path-params
+                        collect
+                          (destructuring-bind (parameter-name parameter-type) param
+                            `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
+             ,@body))))))
 
 (defun find-route (name)
   "Find a route by name (symbol)"
