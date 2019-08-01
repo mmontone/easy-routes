@@ -3,7 +3,7 @@
 ;; From CEPL and Varjo source code by Chris Bagley (Baggers) <techsnuffle@gmail.com>
 
 (defun lambda-list-split (template lam-list)
-  (labels ((kwd (x) (intern (format nil "~a" x) :keyword))
+  (labels ((kwd (x) (intern (string-upcase (princ-to-string x)) :keyword))
            (symbol-name= (x y) (equal (symbol-name x) (symbol-name y)))
            (collector (lam-list &optional current-modifier accum)
              (let ((item (first lam-list)))
@@ -42,7 +42,7 @@
                           lam-list))
                  (unknown (remove-if (lambda (x) (member x template))
                                      &-syms)))
-            (error "~%Varjo: Found the symbol~a ~a. Given that it starts with '&' it looks
+            (error "Found the symbol~a ~a. Given that it starts with '&' it looks
 like a lambda list keyword. Unfortunately the only lambda list keywords that
 are supported in this context are: ~s"
                    (if (> (length unknown) 1) "s" "")
