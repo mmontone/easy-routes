@@ -105,6 +105,29 @@ Decorators are functions that are executed before the route body. They should ca
     (funcall next)))
 ```
 
+Decorators also support parameters, like in the `@check` and `@check-permission` decorators:
+
+```lisp
+(defun @check (predicate http-error next)
+  (if (funcall predicate)
+      (funcall next)
+      (http-error http-error)))
+
+(defun @check-permission (predicate next)
+  (if (funcall predicate)
+      (funcall next)
+      (permission-denied-error)))
+ ```
+ 
+ Then you can use those decorators passing the needed parameters. `predicate` and `http-error` for `@check`, 
+ and `predicate` for check permission:
+ 
+ ```lisp
+ (defroute my-protected-route ("/foo" :method :get
+                                      :decorators (@check my-permissions-checking-function hunchentoot:+http-forbidden+))
+	...)
+```
+
 ## Reference ##
 
 ## Functions
