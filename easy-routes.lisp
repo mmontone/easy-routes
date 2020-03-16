@@ -106,6 +106,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
        (routes:connect *routes-mapper* route)))
 
 (defmethod make-load-form ((var routes:variable-template) &optional env)
+  (declare (ignorable env))
   `(routes::make-variable-template ',(routes::template-data var)))
 
 (defmacro defroute (name template-and-options params &body body)
@@ -124,7 +125,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                           (getf (rest template-and-options) :decorators)))
          (declarations (loop
                           for x = (first body)
-                          while (equalp (first x) 'declare)
+                          while (and (listp x) (equalp (first x) 'declare))
                           do (pop body) 
                           collect x)))
     (assoc-bind ((params nil)
