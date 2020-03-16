@@ -121,7 +121,12 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                           (getf (rest template-and-options) :method))
                      :get))
          (decorators (and (listp template-and-options)
-                          (getf (rest template-and-options) :decorators))))
+                          (getf (rest template-and-options) :decorators)))
+         (declarations (loop
+                          for x = (first body)
+                          while (equalp (first x) 'declare)
+                          do (pop body) 
+                          collect x)))
     (assoc-bind ((params nil)
                  (get-params :&get)
                  (post-params :&post)
@@ -136,6 +141,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
          (setf (gethash ',name *routes*) %route)
          (connect-routes)
          (defun ,name ,arglist
+           ,@declarations
            (let (,@(loop for param in params
                       collect
                         (hunchentoot::make-defun-parameter param ''string :both))
