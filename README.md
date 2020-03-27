@@ -182,6 +182,20 @@ invoices/
 
 Less fancy, but useful too, you can also use `(describe easy-routes:*routes-mapper*)` to visualize the tree of routes.
 
+## Djula integration
+
+`easy-routes+djula` system implements support for generating easy-routes urls from route names and arguments (calls `genurl` function).
+
+Syntax:
+```
+{% genurl route-name &rest args %}
+```
+
+Example:
+```
+{% genurl my-route :id 22 :foo template-var.key %}
+```
+
 ## Reference ##
 
 ## Functions
