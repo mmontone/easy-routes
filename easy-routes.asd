@@ -5,5 +5,6 @@
   :serial t
   :components ((:file "package")
                (:file "util")
-               (:file "easy-routes"))
+               (:file "easy-routes")
+               (:file "routes-map-printer"))
   :depends-on (:hunchentoot :routes))

@@ -128,6 +128,60 @@ Decorators also support parameters, like in the `@check` and `@check-permission`
 	...)
 ```
 
+## Map of routes visualization
+
+CL-ROUTES package implement special SWANK code for routes map visualization. Just inspect `*ROUTES-MAP*` variable from your lisp listener.
+
+For example:
+
+```
+#<ROUTES:MAPPER {1007630E53}>
+--------------------
+
+Tree of routes
+--------------------------------------------------
+
+users invoice-engine::admin/users
+api/invoices/chart invoice-engine::invoices-chart-data
+invoice-engine::dashboard
+logout invoice-engine::logout
+company/logo invoice-engine::company-logo
+search invoice-engine::global-search
+preview-invoice invoice-engine::preview-invoice
+dt-invoices invoice-engine::datatables-list-invoices
+tenants invoice-engine::admin/tenants
+admin/
+    settings invoice-engine::admin/settings
+    invoice-engine::admin/dashboard
+    tenants/new/
+        invoice-engine::admin/tenants/create
+        invoice-engine::admin/tenants/new
+    login/
+        invoice-engine::admin/signin
+        invoice-engine::admin/login
+    tenant/$id invoice-engine::admin/tenant
+    users/
+        new/
+            invoice-engine::admin/users/create
+            invoice-engine::admin/users/new
+        $id/edit/
+            invoice-engine::admin/users/update
+            invoice-engine::admin/users/edit
+customers/
+    invoice-engine::web/list-customers
+    $id invoice-engine::view-customer
+invoices/
+    invoice-engine::list-invoices-route
+    $id/
+        print invoice-engine::web/print-invoice
+        printed invoice-engine::web/printed-invoice
+        invoice-engine::view-invoice
+        send invoice-engine::web/send-invoice-by-email
+
+```
+
+Less fancy, but useful too, you can also use `(describe easy-routes:*routes-mapper*)` to visualize the tree of routes.
+
 ## Reference ##
 
 ## Functions

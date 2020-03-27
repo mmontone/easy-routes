@@ -1,7 +1,10 @@
 (in-package :easy-routes)
 
 (defparameter *routes* (make-hash-table))
-(defparameter *routes-mapper* (make-instance 'routes:mapper))
+(defparameter *routes-mapper* (make-instance 'routes:mapper)
+  "This is the cl-routes map of routes.
+cl-routes implements special SWANK inspect code and prints routes mappers as a tree.
+Just inspect *routes-mapper* from the Lisp listener to see.")
 
 (defclass routes-acceptor (hunchentoot:acceptor)
   ()

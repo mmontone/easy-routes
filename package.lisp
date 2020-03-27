@@ -5,6 +5,7 @@
    #:routes-acceptor
    #:easy-routes-acceptor
    ;; Routes definition
+   #:*routes-mapper*
    #:defroute
    #:route
    #:find-route
