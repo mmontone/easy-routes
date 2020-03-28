@@ -184,9 +184,9 @@ Less fancy, but useful too, you can also use `(describe easy-routes:*routes-mapp
 
 ## Djula integration
 
-`easy-routes+djula` system implements support for generating easy-routes urls from route names and arguments (calls `genurl` function).
+`easy-routes+djula` system implements support for generating easy-routes urls using route names and arguments in Djula templates (calls `genurl` function).
 
-Syntax:
+Djula template syntax:
 ```
 {% genurl route-name &rest args %}
 ```
