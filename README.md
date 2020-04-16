@@ -36,7 +36,7 @@ with:
 * `path`: A string with an url path that can contain arguments prefixed with a colon. 
   Like `"/foo/:x/:y"`, where `:x` and `:y` are bound into x and y variables in the context of the route body.
 * `route-options`: possible options are
-     * `:method` - The HTTP method to dispatch, as a keyword (for example, `:post`).
+     * `:method` - The HTTP method to dispatch, as a keyword. Default is `:get`.
      * `:decorators` - The decorators to attach (see below).
 * `route-params`: a list of params to be extracted from the url or HTTP request body (POST). 
      Has this form: `(params &get get-params &post post-params &path path-params)`, with the `&get`, `&post` and `&path` params sections being optional, and where `params` are grabbed via `hunchentoot:parameter` function, `get-params` via `hunchentoot:get-parameter` function, and `post-params` via `hunchentoot:post-parameter` function. `path-params` specifies the type of params in the url path (see below for an example).
