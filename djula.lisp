@@ -7,13 +7,13 @@
 (djula:def-tag-compiler genurl (route &rest args)
   (lambda (stream)
     (let ((args (loop
-                 for key in args by #'cddr
-                 for value in (rest args) by #'cddr
-                 collect (intern (symbol-name key) :keyword)
-                   collect (cond
-                             ((stringp value) value)
-                             ((numberp value) value)
-                             (t (djula::resolve-variable-phrase (djula::parse-variable-phrase (princ-to-string value))))))))
+                  for key in args by #'cddr
+                  for value in (rest args) by #'cddr
+                  collect (intern (symbol-name key) :keyword)
+                  collect (cond
+                            ((stringp value) value)
+                            ((numberp value) value)
+                            (t (djula::resolve-variable-phrase (djula::parse-variable-phrase (princ-to-string value))))))))
       (write-string (apply #'genurl
                            (intern (symbol-name route) djula::*djula-execute-package*)
                            args)

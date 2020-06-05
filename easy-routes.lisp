@@ -46,14 +46,14 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
         (call-next-method)
         ;; else, a route was matched
         (handler-bind ((error #'hunchentoot:maybe-invoke-debugger))
-           (let ((result (process-route route bindings)))
-             (cond
-               ((pathnamep result)
-                (hunchentoot:handle-static-file
-                 result
-                 (or (hunchentoot:mime-type result)
-                     (hunchentoot:content-type hunchentoot:*reply*))))
-               (t result)))))))
+          (let ((result (process-route route bindings)))
+            (cond
+              ((pathnamep result)
+               (hunchentoot:handle-static-file
+                result
+                (or (hunchentoot:mime-type result)
+                    (hunchentoot:content-type hunchentoot:*reply*))))
+              (t result)))))))
 
 (defclass route (routes:route)
   ((symbol :initarg :symbol
@@ -70,9 +70,9 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 
 (defmethod print-object ((route route) stream)
   (print-unreadable-object (route stream :type t :identity t)
-    (with-slots (symbol required-method routes::template) route 
+    (with-slots (symbol required-method routes::template) route
       (format stream "~A: ~A ~S" symbol required-method routes::template))))
-            
+
 (defmethod routes:route-check-conditions ((route route) bindings)
   (with-slots (required-method) route
     (and required-method
@@ -91,22 +91,22 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   (if (null decorators)
       (funcall function)
       (call-decorator (first decorators)
-               (lambda ()
-                 (call-with-decorators (rest decorators) function)))))
+                      (lambda ()
+                        (call-with-decorators (rest decorators) function)))))
 
 (defmethod process-route ((route route) bindings)
   (call-with-decorators (route-decorators route)
                         (lambda ()
                           (apply (route-symbol route)
                                  (loop for item in (slot-value route 'variables)
-                                    collect (cdr (assoc item bindings
-                                                        :test #'string=)))))))
+                                       collect (cdr (assoc item bindings
+                                                           :test #'string=)))))))
 
 (defun connect-routes ()
   (routes:reset-mapper *routes-mapper*)
   (loop for route being the hash-values of *routes*
-     do
-       (routes:connect *routes-mapper* route)))
+        do
+           (routes:connect *routes-mapper* route)))
 
 (defmethod make-load-form ((var routes:variable-template) &optional env)
   (declare (ignorable env))
@@ -127,10 +127,10 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
          (decorators (and (listp template-and-options)
                           (getf (rest template-and-options) :decorators)))
          (declarations (loop
-                          for x = (first body)
-                          while (and (listp x) (equalp (first x) 'declare))
-                          do (pop body) 
-                          collect x)))
+                         for x = (first body)
+                         while (and (listp x) (equalp (first x) 'declare))
+                         do (pop body)
+                         collect x)))
     (assoc-bind ((params nil)
                  (get-params :&get)
                  (post-params :&post)
@@ -147,18 +147,18 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
          (defun ,name ,arglist
            ,@declarations
            (let (,@(loop for param in params
-                      collect
-                        (hunchentoot::make-defun-parameter param ''string :both))
+                         collect
+                         (hunchentoot::make-defun-parameter param ''string :both))
                  ,@(loop for param in get-params
-                      collect
-                        (hunchentoot::make-defun-parameter param ''string :get))
-                   ,@(loop for param in post-params
-                        collect
-                          (hunchentoot::make-defun-parameter param ''string :post))
-                   ,@(loop for param in path-params
-                        collect
-                          (destructuring-bind (parameter-name parameter-type) param
-                            `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
+                         collect
+                         (hunchentoot::make-defun-parameter param ''string :get))
+                 ,@(loop for param in post-params
+                         collect
+                         (hunchentoot::make-defun-parameter param ''string :post))
+                 ,@(loop for param in path-params
+                         collect
+                         (destructuring-bind (parameter-name parameter-type) param
+                           `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
              ,@body))))))
 
 (defun find-route (name)
@@ -178,10 +178,10 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                          for key = (first rest)
                          for value = (second rest)
                          collect
-                             (cons key
-                                   (if (or (stringp value) (consp value))
-                                       value
-                                       (write-to-string value)))))
+                         (cons key
+                               (if (or (stringp value) (consp value))
+                                   value
+                                   (write-to-string value)))))
          (query-part (set-difference bindings
                                      (routes:template-variables tmpl)
                                      :test (alexandria:named-lambda
@@ -237,7 +237,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                                       s))
                               args)))))
 
-;; Copied code ends here  
+;; Copied code ends here
 
 ;; Decorators
 
@@ -259,7 +259,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 (defun @check-permission (predicate next)
   (if (funcall predicate)
       (funcall next)
-      (permission-denied-error)))      
+      (permission-denied-error)))
 
 ;; HTTP Errors
 
