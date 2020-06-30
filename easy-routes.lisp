@@ -6,10 +6,28 @@
 cl-routes implements special SWANK inspect code and prints routes mappers as a tree.
 Just inspect *routes-mapper* from the Lisp listener to see.")
 
+(defparameter *acceptors-routes-and-mappers* (make-hash-table)
+  "Routes and route mappers for individual acceptors")
+
 (defclass routes-acceptor (hunchentoot:acceptor)
   ()
   (:documentation "This acceptors handles routes and only routes. If no route is matched then an HTTP NOT FOUND error is returned.
 If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-ROUTES-ACCEPTOR"))
+
+(defun acceptor-routes-mapper (acceptor-name)
+  (or (getf (gethash acceptor-name *acceptors-routes-and-mappers*)
+            :routes-mapper)
+      *routes-mapper*))
+
+(defun acceptor-routes (acceptor-name)
+  (or (getf (gethash acceptor-name *acceptors-routes-and-mappers*)
+            :routes)
+      *routes*))
+
+(defun ensure-acceptor-routes-and-mapper (acceptor-name)
+  (or (gethash acceptor-name *acceptors-routes-and-mappers*)
+      (setf (gethash acceptor-name *acceptors-routes-and-mappers*)
+            (list :routes (make-hash-table) :routes-mapper (make-instance 'routes:mapper)))))
 
 (defmethod hunchentoot:acceptor-dispatch-request
     ((acceptor routes-acceptor) request)
@@ -19,7 +37,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                    hunchentoot:+http-not-found+)
              (hunchentoot:abort-request-handler))))
     (multiple-value-bind (route bindings)
-        (routes:match *routes-mapper*
+        (routes:match (acceptor-routes-mapper (hunchentoot:acceptor-name acceptor))
           (hunchentoot:request-uri request))
       (not-found-if-null route)
       (handler-bind ((error #'hunchentoot:maybe-invoke-debugger))
@@ -39,7 +57,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 (defmethod hunchentoot:acceptor-dispatch-request
     ((acceptor easy-routes-acceptor) request)
   (multiple-value-bind (route bindings)
-      (routes:match *routes-mapper*
+      (routes:match (acceptor-routes-mapper (hunchentoot:acceptor-name acceptor))
         (hunchentoot:request-uri request))
     (if (not route)
         ;; Fallback to dispatch via easy-handlers
@@ -102,11 +120,16 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                                        collect (cdr (assoc item bindings
                                                            :test #'string=)))))))
 
-(defun connect-routes ()
-  (routes:reset-mapper *routes-mapper*)
-  (loop for route being the hash-values of *routes*
-        do
-           (routes:connect *routes-mapper* route)))
+(defun connect-routes (acceptor-name)
+  (let* ((routes-and-mapper (if acceptor-name
+                                (ensure-acceptor-routes-and-mapper acceptor-name)
+                                (list :routes *routes* :routes-mapper *routes-mapper*)))
+         (routes (getf routes-and-mapper :routes))
+         (routes-mapper (getf routes-and-mapper :routes-mapper)))
+    (routes:reset-mapper routes-mapper)
+    (loop for route being the hash-values of routes
+          do
+             (routes:connect routes-mapper route))))
 
 (defmethod make-load-form ((var routes:variable-template) &optional env)
   (declare (ignorable env))
@@ -124,6 +147,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
          (method (or (and (listp template-and-options)
                           (getf (rest template-and-options) :method))
                      :get))
+         (acceptor-name (getf (rest template-and-options) :acceptor-name))
          (decorators (and (listp template-and-options)
                           (getf (rest template-and-options) :decorators)))
          (declarations (loop
@@ -142,8 +166,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                                     :variables ',variables
                                     :required-method ',method
                                     :decorators ',decorators)))
-         (setf (gethash ',name *routes*) %route)
-         (connect-routes)
+         ,(if acceptor-name
+              `(let ((%routes-and-mapper (ensure-acceptor-routes-and-mapper ',acceptor-name)))
+                 (setf (gethash ',name (getf %routes-and-mapper :routes)) %route))
+              `(setf (gethash ',name *routes*) %route))
+         (connect-routes ',acceptor-name)
          (defun ,name ,arglist
            ,@declarations
            (let (,@(loop for param in params
@@ -161,9 +188,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                            `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
              ,@body))))))
 
-(defun find-route (name)
+(defun find-route (name &key acceptor-name)
   "Find a route by name (symbol)"
-  (gethash name *routes*))
+  (let ((routes (if acceptor-name (acceptor-routes acceptor-name)
+                    *routes*)))
+    (gethash name routes)))
 
 ;; Code here is copied almost exactly from restas library by Moskvitin Andrey
 
@@ -198,7 +227,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
     uri))
 
 (defmethod make-route-url ((route symbol) args)
-  (make-route-url (or (find-route route)
+  (make-route-url (or (find-route route :acceptor-name (getf args :acceptor-name))
                       (error "Unknown route: ~A" route)) args))
 
 (defmethod make-route-url ((route route) args)
@@ -212,9 +241,10 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   "Generate an absolute url from a route name and arguments"
   (let ((url (make-route-url route-symbol args)))
     (setf (puri:uri-scheme url) :http
-          (puri:uri-host url) (if (boundp 'hunchentoot:*request*)
-                                  (hunchentoot:host)
-                                  "localhost"))
+          (puri:uri-host url)
+          (if (boundp 'hunchentoot:*request*)
+              (hunchentoot:host)
+              "localhost"))
     (puri:render-uri url nil)))
 
 ;; Redirect
