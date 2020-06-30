@@ -10,7 +10,7 @@ It supports:
 * Arguments extraction from the url path
 * Decorators
 
-## Usage: ##
+## Usage ##
 
 Use `routes-acceptor` acceptor:
 
@@ -20,9 +20,9 @@ Use `routes-acceptor` acceptor:
 
 Note that the `routes-acceptor` returns with HTTP not found if no route matches and doesn't fallback to `easy-handlers`, and so it doesn't iterate over Hunchentoot `*dispatch-table*`. Most of the time, that iteration is a useful thing, so you may want to start the `easy-routes:easy-routes-acceptor` instead, that inherits from Hunchentoot `easy-acceptor` and so it iterates the dispatch table if no route matches (useful for being able to use `define-easy-handler` and also handling static files).
 
-## Routes: ##
+## Routes ##
 
-### Syntax: ###
+### Syntax ###
 
 ```lisp
 
@@ -37,7 +37,8 @@ with:
   Like `"/foo/:x/:y"`, where `:x` and `:y` are bound into x and y variables in the context of the route body.
 * `route-options`: possible options are
      * `:method` - The HTTP method to dispatch, as a keyword. Default is `:get`.
-     * `:decorators` - The decorators to attach (see below).
+     * `:decorators` - The decorators to attach (see "decorators" section below).
+     * `:acceptor-name` - The name of the acceptor the route should be added to (optional).
 * `route-params`: a list of params to be extracted from the url or HTTP request body (POST). 
      Has this form: `(params &get get-params &post post-params &path path-params)`, with the `&get`, `&post` and `&path` params sections being optional, and where `params` are grabbed via `hunchentoot:parameter` function, `get-params` via `hunchentoot:get-parameter` function, and `post-params` via `hunchentoot:post-parameter` function. `path-params` specifies the type of params in the url path (see below for an example).
         
@@ -70,7 +71,7 @@ with:
                   (format nil "~A" (+ x y)))
     ```
     
-### Example route: ###
+### Example route ###
 
 ```lisp
 (defroute foo ("/foo/:arg1/:arg2" :method :get
@@ -79,11 +80,11 @@ with:
     (format nil "<h1>FOO arg1: ~a arg2: ~a ~a</h1>" arg1 arg2 w))
 ```
 
-## Decorators: ##
+## Decorators ##
 
 Decorators are functions that are executed before the route body. They should call the `next` parameter function to continue executing the decoration chain and the route body finally.
 
-### Examples: ###
+### Examples ###
 
 ```lisp
 (defun @auth (next)
@@ -128,6 +129,39 @@ Decorators also support parameters, like in the `@check` and `@check-permission`
 	...)
 ```
 
+## Routes for individual acceptors
+
+By default routes are registered globally in `*ROUTES*` and `*ROUTES-MAPPER*` variables.
+That is convenient for the most common case of running a single EASY-ROUTES service per Lisp image.
+
+But it gets problematic if you want to run several EASY-ROUTES based services on the same Lisp image. 
+If routes are registered globally, then all your acceptors use the same routes and mapper; 
+that means that a service A would also respond to routes defined in service B; that's clearly not what you want.
+
+For that case, you can use `acceptor names` to define routes for a specific acceptor.
+
+First you need to give your acceptor a name, using `:name` acceptor parameter:
+
+```lisp
+(hunchentoot:start (make-instance 'easy-routes:routes-acceptor :name 'my-service))
+```
+
+Then, use that name in routes definition `:acceptor-name`:
+
+```lisp
+(defroute my-route ("/my-route" :acceptor-name my-service)
+  ...
+)
+```
+
+Now `my-route` is registered locally to the `my-service` acceptor; other running EASY-ROUTES acceptors don't have it in their map anymore.
+That means you can run several EASY-ROUTES acceptors at the same time on the same Lisp image now.
+
+Lastly, you need to use `:acceptor-name` when generating urls now too:
+
+```lisp
+(genurl 'my-route :acceptor-name 'my-service)
+```
 ## Map of routes visualization
 
 CL-ROUTES package implement special SWANK code for routes map visualization. Just inspect `*ROUTES-MAP*` variable from your lisp listener.
