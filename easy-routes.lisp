@@ -9,6 +9,8 @@ Just inspect *routes-mapper* from the Lisp listener to see.")
 (defparameter *acceptors-routes-and-mappers* (make-hash-table)
   "Routes and route mappers for individual acceptors")
 
+(defvar *route* nil "The current route")
+
 (defclass routes-acceptor (hunchentoot:acceptor)
   ()
   (:documentation "This acceptors handles routes and only routes. If no route is matched then an HTTP NOT FOUND error is returned.
@@ -36,12 +38,12 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
              (setf (hunchentoot:return-code*)
                    hunchentoot:+http-not-found+)
              (hunchentoot:abort-request-handler))))
-    (multiple-value-bind (route bindings)
+    (multiple-value-bind (*route* bindings)
         (routes:match (acceptor-routes-mapper (hunchentoot:acceptor-name acceptor))
           (hunchentoot:request-uri request))
-      (not-found-if-null route)
+      (not-found-if-null *route*)
       (handler-bind ((error #'hunchentoot:maybe-invoke-debugger))
-        (let ((result (process-route route bindings)))
+        (let ((result (process-route acceptor *route* bindings)))
           (cond
             ((pathnamep result)
              (hunchentoot:handle-static-file
@@ -56,15 +58,15 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 
 (defmethod hunchentoot:acceptor-dispatch-request
     ((acceptor easy-routes-acceptor) request)
-  (multiple-value-bind (route bindings)
+  (multiple-value-bind (*route* bindings)
       (routes:match (acceptor-routes-mapper (hunchentoot:acceptor-name acceptor))
         (hunchentoot:request-uri request))
-    (if (not route)
+    (if (not *route*)
         ;; Fallback to dispatch via easy-handlers
         (call-next-method)
         ;; else, a route was matched
         (handler-bind ((error #'hunchentoot:maybe-invoke-debugger))
-          (let ((result (process-route route bindings)))
+          (let ((result (process-route acceptor *route* bindings)))
             (cond
               ((pathnamep result)
                (hunchentoot:handle-static-file
@@ -112,13 +114,16 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                       (lambda ()
                         (call-with-decorators (rest decorators) function)))))
 
-(defmethod process-route ((route route) bindings)
-  (call-with-decorators (route-decorators route)
-                        (lambda ()
-                          (apply (route-symbol route)
-                                 (loop for item in (slot-value route 'variables)
-                                       collect (cdr (assoc item bindings
-                                                           :test #'string=)))))))
+(defgeneric process-route (acceptor route bindings))
+
+(defmethod process-route ((acceptor hunchentoot:acceptor) (route route) bindings)
+  (call-with-decorators
+   (route-decorators route)
+   (lambda ()
+     (apply (route-symbol route)
+            (loop for item in (slot-value route 'variables)
+                  collect (cdr (assoc item bindings
+                                      :test #'string=)))))))
 
 (defun connect-routes (acceptor-name)
   (let* ((routes-and-mapper (if acceptor-name
