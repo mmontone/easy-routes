@@ -216,6 +216,16 @@ invoices/
 
 Less fancy, but useful too, you can also use `(describe easy-routes:*routes-mapper*)` to visualize the tree of routes.
 
+## Augmented error pages and logs
+
+You can get augmented error pages and logs with request, session and route information, adding `easy-routes+errors` as dependency, and subclassing from `easy-routes-errors-acceptor`, like: 
+
+```lisp
+(defclass my-acceptor (easy-routes:easy-routes-acceptor easy-routes::easy-routes-errors-acceptor)
+  ())
+ ```
+ This is implemented with [hunchentoots-errors](https://github.com/mmontone/hunchentoot-errors) library.
+
 ## Djula integration
 
 `easy-routes+djula` system implements support for generating easy-routes urls using route names and arguments in Djula templates (calls `genurl` function).
