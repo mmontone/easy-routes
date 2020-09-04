@@ -46,7 +46,7 @@ with:
 
     ```lisp
     (easy-routes:defroute name ("/foo/:x") (y &get z)
-        (format nil "x: ~a y: ~y z: ~a" x y z))
+        (format nil "x: ~a y: ~a z: ~a" x y z))
     ```
     Also, params can have Hunchentoot easy-handler style options, described here: http://weitz.de/hunchentoot/#define-easy-handler
     
