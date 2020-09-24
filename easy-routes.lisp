@@ -56,8 +56,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   ()
   (:documentation "This acceptor tries to match and handle easy-routes first, but fallbacks to easy-routes dispatcher if there's no matching"))
 
-(defmethod hunchentoot:acceptor-dispatch-request
-    ((acceptor easy-routes-acceptor) request)
+(defclass easy-routes-ssl-acceptor (easy-routes-acceptor hunchentoot:ssl-acceptor)
+  ()
+  (:documentation "As for EASY-ROUTES-ACCEPTOR, but works with the hunchentoot EASY-SSL-ACCEPTOR instead."))
+
+(defmethod hunchentoot:acceptor-dispatch-request ((acceptor easy-routes-acceptor) request)
   (multiple-value-bind (*route* bindings)
       (routes:match (acceptor-routes-mapper (hunchentoot:acceptor-name acceptor))
         (hunchentoot:request-uri request))
