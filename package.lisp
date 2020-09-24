@@ -4,6 +4,7 @@
    ;; Hunchentoot acceptor
    #:routes-acceptor
    #:easy-routes-acceptor
+   #:easy-routes-ssl-acceptor
    ;; Routes definition
    #:*routes-mapper*
    #:defroute
