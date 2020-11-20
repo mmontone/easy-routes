@@ -155,7 +155,8 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
          (method (or (and (listp template-and-options)
                           (getf (rest template-and-options) :method))
                      :get))
-         (acceptor-name (getf (rest template-and-options) :acceptor-name))
+         (acceptor-name (and (listp template-and-options)
+                             (getf (rest template-and-options) :acceptor-name)))
          (decorators (and (listp template-and-options)
                           (getf (rest template-and-options) :decorators)))
          (declarations (loop
