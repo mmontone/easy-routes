@@ -125,7 +125,8 @@ Decorators also support parameters, like in the `@check` and `@check-permission`
  
  ```lisp
  (defroute my-protected-route ("/foo" :method :get
-                                      :decorators (@check my-permissions-checking-function hunchentoot:+http-forbidden+))
+                                      :decorators ((@check my-permissions-checking-function hunchentoot:+http-forbidden+)))
+	()			      
 	...)
 ```
 
