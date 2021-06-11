@@ -9,6 +9,7 @@ It supports:
 * Dispatch based on HTTP method
 * Arguments extraction from the url path
 * Decorators
+* Url generation from route names
 
 ## Usage ##
 
@@ -78,6 +79,15 @@ with:
                                   :decorators (@auth @db @html))
    (&get w)
     (format nil "<h1>FOO arg1: ~a arg2: ~a ~a</h1>" arg1 arg2 w))
+```
+## Url generation
+
+Use `genurl` function with the name of the route and route parameters as keyword arguments to generate urls.
+
+Example:
+
+```lisp
+(genurl 'save-payment-form :id (id application))
 ```
 
 ## Decorators ##
