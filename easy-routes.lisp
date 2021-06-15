@@ -144,7 +144,46 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   `(routes::make-variable-template ',(routes::template-data var)))
 
 (defmacro defroute (name template-and-options params &body body)
-  "Route definition syntax"
+  "Macro for defining a route.
+
+Syntax:
+
+(defroute <name> (<path> &rest <route-options>) <route-params> 
+   &body body)
+
+with:
+
+* path: A string with an url path that can contain arguments prefixed with a colon. 
+  Like \"/foo/:x/:y\", where :x and :y are bound into x and y variables in the context of the route body.
+* route-options: possible options are
+     * :method - The HTTP method to dispatch, as a keyword. Default is :get.
+     * :decorators - The decorators to attach.
+     * :acceptor-name - The name of the acceptor the route should be added to (optional).
+* route-params: a list of params to be extracted from the url or HTTP request body (POST). 
+     Has this form: (params &get get-params &post post-params &path path-params), with the &get, &post and &path params sections being optional, and where params are grabbed via HUNCHENTOOT:PARAMETER function, get-params via HUNCHENTOOT:GET-PARAMETER function, and post-params via HUNCHENTOOT:POST-PARAMETER function. path-params specifies the type of params in the url path.
+        
+    For example:
+    
+    (easy-routes:defroute name (\"/foo/:x\") (y &get z)
+        (format nil \"x: ~a y: ~a z: ~a\ x y z))
+    
+    Also, params can have Hunchentoot easy-handler style options, described here: http://weitz.de/hunchentoot/#define-easy-handler
+    
+    (var &key real-name parameter-type init-form request-type)
+           
+    For example:
+    
+    (easy-routes:defroute foo \"/foo/:x\" 
+        ((y :real-name \"Y\" :init-form 22 :parameter-type 'integer))
+      (format nil \"~A - ~A\" x y))     
+    
+    You can also specify the type of path parameters after &path. For example, say you want to sum a path argument to a query argument. You can specify their type as 'INTEGER and calculate their sum without parsing:
+    
+    (easy-routes:defroute foo \"/foo/:x\" 
+        ((y :init-form 10 :parameter-type 'integer) 
+            &path (x 'integer))
+                  (format nil \"~A\" (+ x y)))"
+   
   (let* ((template (if (listp template-and-options)
                        (first template-and-options)
                        template-and-options))
@@ -266,7 +305,8 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
           format)))
 
 (defun redirect (route-symbol &rest args)
-  "Redirect to a route url. Pass the route name and the parameters."
+  "Redirect to a route with name ROUTE-SYMBOL.
+ARGS is a property list with route parameters."
   (hunchentoot:redirect
    (hunchentoot:url-decode
     (apply-format-aux route-symbol
@@ -291,11 +331,24 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   (funcall next))
 
 (defun @check (predicate http-error next)
+  "Decorator that checks if PREDICATE evaluation is true.
+PREDICATE is a funcallable object.
+If the check succeeds, then the NEXT middleware is called. 
+If the check fails, then the request is aborted with HTTP status HTTP-ERROR.
+
+Example usage:
+
+(defroute my-route (\"/my-route\" :method :get
+                                :decorators ((@check my-permissions-checking-function hunchentoot:+http-forbidden+)))
+  ... 
+)"
   (if (funcall predicate)
       (funcall next)
       (http-error http-error)))
 
 (defun @check-permission (predicate next)
+  "Decorator that aborts the current request with a HTTP permission denied error if the evaluation of PREDICATE is false.
+PREDICATE is a funcallable object."
   (if (funcall predicate)
       (funcall next)
       (permission-denied-error)))
@@ -303,18 +356,37 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 ;; HTTP Errors
 
 (defun http-error (http-error)
+  "Abort current handler and signal HTTP error HTTP-ERROR.
+
+HTTP-ERROR should be an HTTP status code (integer)."
   (setf (hunchentoot:return-code*) http-error)
   (hunchentoot:abort-request-handler))
 
 (defun not-found-error ()
+  "Aborts current handler and returns with an HTTP not found error."
   (http-error hunchentoot:+http-not-found+))
 
 (defun permission-denied-error ()
+  "Aborts current handler and returns with an HTTP forbidden error."
   (http-error hunchentoot:+http-forbidden+))
 
 (defun or-http-error (value http-error)
+  "Utility function for signaling HTTP-ERROR if VALUE is null.
+
+HTTP-ERROR should be an HTTP status code (integer)."
   (or value
       (http-error http-error)))
 
 (defun or-not-found (value)
+  "Utility function for signaling an HUNCHENTOOT:+HTTP-NOT-FOUND+ error if VALUE is null.
+
+Use in your routes like:
+
+(let ((my-object (or-not-found (find-my-object id))))
+   ...)
+
+where id is a route parameter.
+
+The route retuns an HTTP not found error if object with that id could not be found.
+"
   (or-http-error value hunchentoot:+http-not-found+))
