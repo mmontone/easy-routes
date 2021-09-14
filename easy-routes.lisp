@@ -276,7 +276,8 @@ with:
 
 (defmethod make-route-url ((route symbol) args)
   (make-route-url (or (find-route route :acceptor-name (getf args :acceptor-name))
-                      (error "Unknown route: ~A" route)) args))
+                      (error "Unknown route: ~A" route))
+		  (alexandria:remove-from-plist args :acceptor-name)))
 
 (defmethod make-route-url ((route route) args)
   (make-route-url (routes:route-template route) args))
