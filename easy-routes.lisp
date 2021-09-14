@@ -148,42 +148,42 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 
 Syntax:
 
-(defroute <name> (<path> &rest <route-options>) <route-params> 
+(defroute <name> (<path> &rest <route-options>) <route-params>
    &body body)
 
 with:
 
-* path: A string with an url path that can contain arguments prefixed with a colon. 
+* path: A string with an url path that can contain arguments prefixed with a colon.
   Like \"/foo/:x/:y\", where :x and :y are bound into x and y variables in the context of the route body.
 * route-options: possible options are
      * :method - The HTTP method to dispatch, as a keyword. Default is :get.
      * :decorators - The decorators to attach.
      * :acceptor-name - The name of the acceptor the route should be added to (optional).
-* route-params: a list of params to be extracted from the url or HTTP request body (POST). 
+* route-params: a list of params to be extracted from the url or HTTP request body (POST).
      Has this form: (params &get get-params &post post-params &path path-params), with the &get, &post and &path params sections being optional, and where params are grabbed via HUNCHENTOOT:PARAMETER function, get-params via HUNCHENTOOT:GET-PARAMETER function, and post-params via HUNCHENTOOT:POST-PARAMETER function. path-params specifies the type of params in the url path.
-        
+
     For example:
-    
+
     (easy-routes:defroute name (\"/foo/:x\") (y &get z)
         (format nil \"x: ~a y: ~a z: ~a\ x y z))
-    
+
     Also, params can have Hunchentoot easy-handler style options, described here: http://weitz.de/hunchentoot/#define-easy-handler
-    
+
     (var &key real-name parameter-type init-form request-type)
-           
+
     For example:
-    
-    (easy-routes:defroute foo \"/foo/:x\" 
+
+    (easy-routes:defroute foo \"/foo/:x\"
         ((y :real-name \"Y\" :init-form 22 :parameter-type 'integer))
-      (format nil \"~A - ~A\" x y))     
-    
+      (format nil \"~A - ~A\" x y))
+
     You can also specify the type of path parameters after &path. For example, say you want to sum a path argument to a query argument. You can specify their type as 'INTEGER and calculate their sum without parsing:
-    
-    (easy-routes:defroute foo \"/foo/:x\" 
-        ((y :init-form 10 :parameter-type 'integer) 
+
+    (easy-routes:defroute foo \"/foo/:x\"
+        ((y :init-form 10 :parameter-type 'integer)
             &path (x 'integer))
                   (format nil \"~A\" (+ x y)))"
-   
+
   (let* ((template (if (listp template-and-options)
                        (first template-and-options)
                        template-and-options))
@@ -334,14 +334,14 @@ ARGS is a property list with route parameters."
 (defun @check (predicate http-error next)
   "Decorator that checks if PREDICATE evaluation is true.
 PREDICATE is a funcallable object.
-If the check succeeds, then the NEXT middleware is called. 
+If the check succeeds, then the NEXT middleware is called.
 If the check fails, then the request is aborted with HTTP status HTTP-ERROR.
 
 Example usage:
 
 (defroute my-route (\"/my-route\" :method :get
                                 :decorators ((@check my-permissions-checking-function hunchentoot:+http-forbidden+)))
-  ... 
+  ...
 )"
   (if (funcall predicate)
       (funcall next)
