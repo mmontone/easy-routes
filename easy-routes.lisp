@@ -286,14 +286,41 @@ with:
   "Generate a relative url from a route name and arguments"
   (puri:render-uri (make-route-url route-symbol args) nil))
 
+(defun parse-host-and-port (host-header)
+  "Parse host and port from a Host HTTP reader."
+  (let ((parsed (split-sequence:split-sequence #\: host-header)))
+    (values (first parsed)
+	    (when (second parsed)
+	      (parse-integer (second parsed))))))
+
 (defun genurl* (route-symbol &rest args &key &allow-other-keys)
   "Generate an absolute url from a route name and arguments"
-  (let ((url (make-route-url route-symbol args)))
-    (setf (puri:uri-scheme url) :http
-          (puri:uri-host url)
-          (if (boundp 'hunchentoot:*request*)
-              (hunchentoot:host)
-              "localhost"))
+  (let ((uri-scheme
+	  (if (boundp 'hunchentoot:*acceptor*)
+	      (if (hunchentoot:acceptor-ssl-p hunchentoot:*acceptor*)
+                  :https
+                  :http)
+	      (progn
+		(warn "Cannot infer uri scheme. Using \"http\". In EASY-ROUTES:GENURL*.")
+		:http)))
+	(host
+	  (cond
+	    ((boundp 'hunchentoot:*request*)
+	     (parse-host-and-port (hunchentoot:host)))
+	    ((boundp 'hunchentoot:*acceptor*)
+	     (hunchentoot:acceptor-address hunchentoot:*acceptor*))
+	    (t
+	     (warn "Cannot infer host. Using \"localhost\". In EASY-ROUTES:GENURL*.")
+	     "localhost")))
+	(port (cond
+		((boundp 'hunchentoot:*request*)
+		 (second (multiple-value-list (parse-host-and-port (hunchentoot:host)))))
+		((boundp 'hunchentoot:*acceptor*)
+		 (hunchentoot:acceptor-port hunchentoot:*acceptor*))))
+	(url (make-route-url route-symbol args)))
+    (setf (puri:uri-scheme url) uri-scheme
+          (puri:uri-host url) host
+	  (puri:uri-port url) port)
     (puri:render-uri url nil)))
 
 ;; Redirect
