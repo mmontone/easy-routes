@@ -294,7 +294,9 @@ with:
 	      (parse-integer (second parsed))))))
 
 (defun genurl* (route-symbol &rest args &key &allow-other-keys)
-  "Generate an absolute url from a route name and arguments"
+  "Generate an absolute url from a route name and arguments.
+
+Looks at HUNCHENTOOT:*REQUEST* and HUNCHENTOOT:*ACCEPTOR* to infer host and uri scheme. If HUNCHENTOOT:*REQUEST* and HUNCHENTOOT:*ACCEPTOR* are not bound, then \"http\" and \"localhost\" are used as uri scheme and host."
   (let ((uri-scheme
 	  (if (boundp 'hunchentoot:*acceptor*)
 	      (if (hunchentoot:acceptor-ssl-p hunchentoot:*acceptor*)
