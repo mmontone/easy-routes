@@ -250,6 +250,12 @@ with:
   (routes:parse-template (find-route route-symbol)))
 
 (defmethod make-route-url ((tmpl list) args)
+  ;; Check that template variables are provided
+  (let ((args-keys (mapcar #'car (alexandria:plist-alist args))))
+    (dolist (var (routes:template-variables tmpl))
+      (when (not (member var args-keys))
+	(error "Argument required to generate url: ~s" var))))
+  
   (let* ((uri (make-instance 'puri:uri))
          (bindings (loop for rest on args by #'cddr
                          for key = (first rest)
