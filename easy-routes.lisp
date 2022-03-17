@@ -385,29 +385,29 @@ PREDICATE is a funcallable object."
 
 ;; HTTP Errors
 
-(defun http-error (http-error)
+(defun http-error (http-error &optional result)
   "Abort current handler and signal HTTP error HTTP-ERROR.
 
 HTTP-ERROR should be an HTTP status code (integer)."
   (setf (hunchentoot:return-code*) http-error)
-  (hunchentoot:abort-request-handler))
+  (hunchentoot:abort-request-handler result))
 
-(defun not-found-error ()
+(defun not-found-error (&optional result)
   "Aborts current handler and returns with an HTTP not found error."
-  (http-error hunchentoot:+http-not-found+))
+  (http-error hunchentoot:+http-not-found+ result))
 
-(defun permission-denied-error ()
+(defun permission-denied-error (&optional result)
   "Aborts current handler and returns with an HTTP forbidden error."
-  (http-error hunchentoot:+http-forbidden+))
+  (http-error hunchentoot:+http-forbidden+ result))
 
-(defun or-http-error (value http-error)
+(defun or-http-error (value http-error &optional result)
   "Utility function for signaling HTTP-ERROR if VALUE is null.
 
 HTTP-ERROR should be an HTTP status code (integer)."
   (or value
-      (http-error http-error)))
+      (http-error http-error result)))
 
-(defun or-not-found (value)
+(defun or-not-found (value &optional result)
   "Utility function for signaling an HUNCHENTOOT:+HTTP-NOT-FOUND+ error if VALUE is null.
 
 Use in your routes like:
@@ -419,4 +419,4 @@ where id is a route parameter.
 
 The route retuns an HTTP not found error if object with that id could not be found.
 "
-  (or-http-error value hunchentoot:+http-not-found+))
+  (or-http-error value hunchentoot:+http-not-found+ result))
