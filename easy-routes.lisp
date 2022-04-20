@@ -99,7 +99,9 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 (defmethod routes:route-check-conditions ((route route) bindings)
   (with-slots (required-method) route
     (and required-method
-         (eql (hunchentoot:request-method*) required-method)
+	 (if (listp required-method)
+	     (member (hunchentoot:request-method*) required-method)
+             (eql (hunchentoot:request-method*) required-method))
          t)))
 
 (defmethod routes:route-name ((route route))
