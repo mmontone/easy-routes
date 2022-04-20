@@ -78,13 +78,25 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
                     (hunchentoot:content-type hunchentoot:*reply*))))
               (t result)))))))
 
+(deftype http-method ()
+  `(member :get :head :post :put :delete :connect :options :trace :patch))
+
+(defun valid-route-method-p (method-spec)
+  (or (typep method-spec 'http-method)
+      (and (listp method-spec)
+	   (not (null method-spec))
+	   (every (lambda (member)
+		    (typep member 'http-method))
+		  method-spec))))
+
 (defclass route (routes:route)
   ((symbol :initarg :symbol
-           :reader route-symbol)
+           :reader route-symbol
+	   :type symbol)
    (variables :initarg :variables
               :reader variables)
    (required-method :initarg :required-method
-                    :initform nil
+                    :type (satisfies valid-route-method-p)
                     :reader required-method)
    (decorators :initarg :decorators
                :initform nil
