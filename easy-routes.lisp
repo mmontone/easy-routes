@@ -211,44 +211,43 @@ with:
          (acceptor-name (and (listp template-and-options)
                              (getf (rest template-and-options) :acceptor-name)))
          (decorators (and (listp template-and-options)
-                          (getf (rest template-and-options) :decorators)))
-         (declarations (loop
-                         for x = (first body)
-                         while (and (listp x) (equalp (first x) 'declare))
-                         do (pop body)
-                         collect x)))
-    (assoc-bind ((params nil)
-                 (get-params :&get)
-                 (post-params :&post)
-                 (path-params :&path))
-        (lambda-list-split '(:&get :&post :&path) params)
-      `(let ((%route (make-instance 'route
-                                    :symbol ',name
-                                    :template ',(routes:parse-template template)
-                                    :variables ',variables
-                                    :required-method ',method
-                                    :decorators ',decorators)))
-         ,(if acceptor-name
-              `(let ((%routes-and-mapper (ensure-acceptor-routes-and-mapper ',acceptor-name)))
-                 (setf (gethash ',name (getf %routes-and-mapper :routes)) %route))
-              `(setf (gethash ',name *routes*) %route))
-         (connect-routes ',acceptor-name)
-         (defun ,name ,arglist
-           ,@declarations
-           (let (,@(loop for param in params
-                         collect
-                         (hunchentoot::make-defun-parameter param ''string :both))
-                 ,@(loop for param in get-params
-                         collect
-                         (hunchentoot::make-defun-parameter param ''string :get))
-                 ,@(loop for param in post-params
-                         collect
-                         (hunchentoot::make-defun-parameter param ''string :post))
-                 ,@(loop for param in path-params
-                         collect
-                         (destructuring-bind (parameter-name parameter-type) param
-                           `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
-             ,@body))))))
+                          (getf (rest template-and-options) :decorators))))
+    (multiple-value-bind (body declarations docstring)
+	(alexandria:parse-body body :documentation t)
+      (assoc-bind ((params nil)
+                   (get-params :&get)
+                   (post-params :&post)
+                   (path-params :&path))
+          (lambda-list-split '(:&get :&post :&path) params)
+	`(let ((%route (make-instance 'route
+                                      :symbol ',name
+                                      :template ',(routes:parse-template template)
+                                      :variables ',variables
+                                      :required-method ',method
+                                      :decorators ',decorators)))
+           ,(if acceptor-name
+		`(let ((%routes-and-mapper (ensure-acceptor-routes-and-mapper ',acceptor-name)))
+                   (setf (gethash ',name (getf %routes-and-mapper :routes)) %route))
+		`(setf (gethash ',name *routes*) %route))
+           (connect-routes ',acceptor-name)
+           (defun ,name ,arglist
+             ,@(when docstring
+		 (list docstring))
+	     (let (,@(loop for param in params
+                           collect
+                           (hunchentoot::make-defun-parameter param ''string :both))
+                   ,@(loop for param in get-params
+                           collect
+                           (hunchentoot::make-defun-parameter param ''string :get))
+                   ,@(loop for param in post-params
+                           collect
+                           (hunchentoot::make-defun-parameter param ''string :post))
+                   ,@(loop for param in path-params
+                           collect
+                           (destructuring-bind (parameter-name parameter-type) param
+                             `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
+	       ,@declarations
+               ,@body)))))))
 
 (defun find-route (name &key acceptor-name)
   "Find a route by name (symbol)"
