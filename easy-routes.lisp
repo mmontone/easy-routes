@@ -167,8 +167,9 @@ Syntax:
 
 with:
 
-* path: A string with an url path that can contain arguments prefixed with a colon.
-  Like \"/foo/:x/:y\", where :x and :y are bound into x and y variables in the context of the route body.
+* path: A string or a symbol evaluating to a string with an url path
+  that can contain arguments prefixed with a colon.
+  Like \"/foo/:x/:y\", where :x and :y are bound into x and y variables in the context of the route body.  
 * route-options: possible options are
      * :method - The HTTP method to dispatch, as a keyword. Default is :get.
      * :decorators - The decorators to attach.
@@ -198,9 +199,12 @@ with:
             &path (x 'integer))
                   (format nil \"~A\" (+ x y)))"
 
-  (let* ((template (if (listp template-and-options)
-                       (first template-and-options)
-                       template-and-options))
+  (let* ((template (let ((template (if (listp template-and-options)
+                                       (first template-and-options)
+                                       template-and-options)))
+                     (etypecase template
+                       (string template)
+                       (symbol (the string (symbol-value template))))))
          (variables (routes:template-variables
                      (routes:parse-template template)))
          (arglist (mapcar (alexandria:compose #'intern #'symbol-name)
