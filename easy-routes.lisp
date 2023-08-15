@@ -109,6 +109,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
       (format stream "~A: ~A ~S" symbol required-method routes::template))))
 
 (defmethod routes:route-check-conditions ((route route) bindings)
+  (declare (ignorable bindings))
   (with-slots (required-method) route
     (and required-method
          (if (listp required-method)
