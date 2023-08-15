@@ -47,7 +47,7 @@
 
 (defmethod print-route ((route routes::concat-template) stream)
   (loop for item in (routes::template-data route)
-     do (print-route item)))
+     do (print-route item stream)))
 
 (defmethod describe-object ((mapper routes:mapper) stream)
   (call-next-method)
