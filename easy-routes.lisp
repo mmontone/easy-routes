@@ -439,3 +439,17 @@ where id is a route parameter.
 The route retuns an HTTP not found error if object with that id could not be found.
 "
   (or-http-error value hunchentoot:+http-not-found+ result))
+
+;; Type declarations
+
+(declaim
+ (ftype (function (symbol &rest t &key &allow-other-keys) *)
+        easy-routes:genurl)
+ (ftype (function (symbol &rest t) *)
+        easy-routes:redirect)
+ (ftype (function (symbol &rest t &key &allow-other-keys) *)
+        easy-routes:genurl*)
+ (ftype
+  (function (symbol &key (:acceptor-name symbol)) (values t boolean))
+  easy-routes:find-route)
+ (ftype (function (integer &optional t) *) easy-routes:http-error))
