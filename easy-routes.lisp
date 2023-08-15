@@ -448,13 +448,13 @@ The route retuns an HTTP not found error if object with that id could not be fou
 ;; Type declarations
 
 (declaim
- (ftype (function (symbol &rest t &key &allow-other-keys) *)
+ (ftype (function (symbol &rest t &key &allow-other-keys) string)
         easy-routes:genurl)
  (ftype (function (symbol &rest t) *)
         easy-routes:redirect)
- (ftype (function (symbol &rest t &key &allow-other-keys) *)
+ (ftype (function (symbol &rest t &key &allow-other-keys) string)
         easy-routes:genurl*)
  (ftype
-  (function (symbol &key (:acceptor-name symbol)) (values t boolean))
+  (function (symbol &key (:acceptor-name symbol)) (values (or route null) boolean))
   easy-routes:find-route)
  (ftype (function (integer &optional t) *) easy-routes:http-error))
