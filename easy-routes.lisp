@@ -84,15 +84,15 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 (defun valid-route-method-p (method-spec)
   (or (typep method-spec 'http-method)
       (and (listp method-spec)
-	   (not (null method-spec))
-	   (every (lambda (member)
-		    (typep member 'http-method))
-		  method-spec))))
+           (not (null method-spec))
+           (every (lambda (member)
+                    (typep member 'http-method))
+                  method-spec))))
 
 (defclass route (routes:route)
   ((symbol :initarg :symbol
            :reader route-symbol
-	   :type symbol)
+           :type symbol)
    (variables :initarg :variables
               :reader variables)
    (required-method :initarg :required-method
@@ -111,8 +111,8 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 (defmethod routes:route-check-conditions ((route route) bindings)
   (with-slots (required-method) route
     (and required-method
-	 (if (listp required-method)
-	     (member (hunchentoot:request-method*) required-method)
+         (if (listp required-method)
+             (member (hunchentoot:request-method*) required-method)
              (eql (hunchentoot:request-method*) required-method))
          t)))
 
@@ -169,7 +169,7 @@ with:
 
 * path: A string or a symbol evaluating to a string with an url path
   that can contain arguments prefixed with a colon.
-  Like \"/foo/:x/:y\", where :x and :y are bound into x and y variables in the context of the route body.  
+  Like \"/foo/:x/:y\", where :x and :y are bound into x and y variables in the context of the route body.
 * route-options: possible options are
      * :method - The HTTP method to dispatch, as a keyword. Default is :get.
      * :decorators - The decorators to attach.
@@ -217,27 +217,27 @@ with:
          (decorators (and (listp template-and-options)
                           (getf (rest template-and-options) :decorators))))
     (multiple-value-bind (body declarations docstring)
-	(alexandria:parse-body body :documentation t)
+        (alexandria:parse-body body :documentation t)
       (assoc-bind ((params nil)
                    (get-params :&get)
                    (post-params :&post)
                    (path-params :&path))
           (lambda-list-split '(:&get :&post :&path) params)
-	`(let ((%route (make-instance 'route
+        `(let ((%route (make-instance 'route
                                       :symbol ',name
                                       :template ',(routes:parse-template template)
                                       :variables ',variables
                                       :required-method ',method
                                       :decorators ',decorators)))
            ,(if acceptor-name
-		`(let ((%routes-and-mapper (ensure-acceptor-routes-and-mapper ',acceptor-name)))
+                `(let ((%routes-and-mapper (ensure-acceptor-routes-and-mapper ',acceptor-name)))
                    (setf (gethash ',name (getf %routes-and-mapper :routes)) %route))
-		`(setf (gethash ',name *routes*) %route))
+                `(setf (gethash ',name *routes*) %route))
            (connect-routes ',acceptor-name)
            (defun ,name ,arglist
              ,@(when docstring
-		 (list docstring))
-	     (let (,@(loop for param in params
+                 (list docstring))
+             (let (,@(loop for param in params
                            collect
                            (hunchentoot::make-defun-parameter param ''string :both))
                    ,@(loop for param in get-params
@@ -250,7 +250,7 @@ with:
                            collect
                            (destructuring-bind (parameter-name parameter-type) param
                              `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
-	       ,@declarations
+               ,@declarations
                ,@body)))))))
 
 (defun find-route (name &key acceptor-name)
