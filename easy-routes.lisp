@@ -254,6 +254,8 @@ with:
                ,@declarations
                ,@body)))))))
 
+(declaim (ftype (function (symbol &key (:acceptor-name symbol)) (values (or route null) boolean))
+		easy-routes:find-route))
 (defun find-route (name &key acceptor-name)
   "Find a route by name (symbol)"
   (let ((routes (if acceptor-name (acceptor-routes acceptor-name)
@@ -305,6 +307,9 @@ with:
 
 (defmethod make-route-url ((route route) args)
   (make-route-url (routes:route-template route) args))
+
+(declaim (ftype (function (symbol &rest t &key &allow-other-keys) (values string &optional))
+		easy-routes:genurl easy-routes:genurl*))
 
 (defun genurl (route-symbol &rest args &key &allow-other-keys)
   "Generate a relative url from a route name and arguments"
@@ -448,13 +453,6 @@ The route retuns an HTTP not found error if object with that id could not be fou
 ;; Type declarations
 
 (declaim
- (ftype (function (symbol &rest t &key &allow-other-keys) string)
-        easy-routes:genurl)
  (ftype (function (symbol &rest t) *)
         easy-routes:redirect)
- (ftype (function (symbol &rest t &key &allow-other-keys) string)
-        easy-routes:genurl*)
- (ftype
-  (function (symbol &key (:acceptor-name symbol)) (values (or route null) boolean))
-  easy-routes:find-route)
  (ftype (function (integer &optional t) *) easy-routes:http-error))
