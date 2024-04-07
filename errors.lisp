@@ -1,7 +1,19 @@
 (in-package :easy-routes)
 
-(defclass easy-routes-errors-acceptor (hunchentoot-errors:errors-acceptor)
+(defclass routes-errors-acceptor (routes-acceptor hunchentoot-errors:errors-acceptor)
   ())
+
+(defclass routes-ssl-errors-acceptor (routes-ssl-acceptor hunchentoot-errors:errors-acceptor)
+  ())
+
+(defclass easy-routes-errors-acceptor (easy-routes-acceptor hunchentoot-errors:errors-acceptor)
+  ())
+
+(defclass easy-routes-ssl-errors-acceptor (easy-routes-ssl-acceptor hunchentoot-errors:errors-acceptor)
+  ())
+
+(export '(routes-errors-acceptor routes-ssl-errors-acceptor
+	  easy-routes-errors-acceptor easy-routes-ssl-errors-acceptor))
 
 (defmethod hunchentoot-errors::acceptor-log-error
     (stream (acceptor easy-routes-errors-acceptor) log-level format-string &rest format-arguments)
