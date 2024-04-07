@@ -3,6 +3,7 @@
   (:export
    ;; Hunchentoot acceptor
    #:routes-acceptor
+   #:routes-ssl-acceptor
    #:easy-routes-acceptor
    #:easy-routes-ssl-acceptor
    ;; Routes definition

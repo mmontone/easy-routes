@@ -16,6 +16,10 @@ Just inspect *routes-mapper* from the Lisp listener to see.")
   (:documentation "This acceptors handles routes and only routes. If no route is matched then an HTTP NOT FOUND error is returned.
 If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-ROUTES-ACCEPTOR"))
 
+(defclass routes-ssl-acceptor (routes-acceptor hunchentoot:ssl-acceptor)
+  ()
+  (:documentation "As for ROUTES-ACCEPTOR, but works with the hunchentoot SSL-ACCEPTOR instead."))
+
 (defun acceptor-routes-mapper (acceptor-name)
   (or (getf (gethash acceptor-name *acceptors-routes-and-mappers*)
             :routes-mapper)
