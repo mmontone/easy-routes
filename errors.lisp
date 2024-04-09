@@ -29,4 +29,6 @@
              (format msg "<p>")
              (print-route route msg)
              (format msg "</p>"))))
-    "")))
+       "")))
+
+(export 'easy-routes-errors-acceptor)
