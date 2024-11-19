@@ -15,6 +15,7 @@
    #:genurl*
    #:redirect
    ;; Decorators
+   #:@content-type
    #:@html
    #:@json
    #:@check
