@@ -16,6 +16,9 @@
    #:redirect
    ;; Decorators
    #:@content-type
+   #:@header-out
+   #:@headers-out
+   #:@accept
    #:@html
    #:@json
    #:@check

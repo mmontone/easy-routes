@@ -398,6 +398,24 @@ ARGS is a property list with route parameters."
   (setf (hunchentoot:content-type*) "application/json")
   (funcall next))
 
+(defun @headers-out (next headers)
+  "Send headers out."
+  (mapcan (lambda (header)
+            (setf (hunchentoot:header-out (car header)) (cdr header)))
+          headers)
+  (funcall next))
+
+(defun @header-out (next header value)
+  "Send header out."
+  (setf (hunchentoot:header-out header) value)
+  (funcall next))
+
+(defun @accept (next accept)
+  "HTTP Accept decorator.
+See: https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Accept"
+  (setf (hunchentoot:header-out "Accept") accept)
+  (funcall next))
+
 (defun @check (next predicate http-error)
   "Decorator that checks if PREDICATE evaluation is true.
 PREDICATE is a funcallable object.
