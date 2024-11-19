@@ -142,7 +142,7 @@ Decorators also support parameters, like in the `@check` and `@check-permission`
 
 ### List of included decorators
 
-- `@content-type`, `@html`, `@json`, `@headers-out`, `@header-out`, `@accept`, `@cors`, `@check`, `@check-permission`.
+`@content-type`, `@html`, `@json`, `@headers-out`, `@header-out`, `@accept`, `@cors`, `@check`, `@check-permission`.
 
 ## Routes for individual acceptors
 

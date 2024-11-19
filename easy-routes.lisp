@@ -383,7 +383,7 @@ ARGS is a property list with route parameters."
 
 ;; Decorators
 
-(defun @content-type (content-type next)
+(defun @content-type (next content-type)
   "Sets reply content type to CONTENT-TYPE."
   (setf (hunchentoot:content-type*) content-type)
   (funcall next))
