@@ -119,12 +119,12 @@ Decorators are functions that are executed before the route body. They should ca
 Decorators also support parameters, like in the `@check` and `@check-permission` decorators:
 
 ```lisp
-(defun @check (predicate http-error next)
+(defun @check (next predicate http-error)
   (if (funcall predicate)
       (funcall next)
       (http-error http-error)))
 
-(defun @check-permission (predicate next)
+(defun @check-permission (next predicate)
   (if (funcall predicate)
       (funcall next)
       (permission-denied-error)))

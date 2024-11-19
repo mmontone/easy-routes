@@ -126,7 +126,7 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
 
 (defun call-decorator (decorator next)
   (if (listp decorator)
-      (apply (first decorator) (append (rest decorator) (list next)))
+      (apply (first decorator) next (rest decorator))
       (funcall decorator next)))
 
 (defun call-with-decorators (decorators function)
@@ -259,7 +259,7 @@ with:
                ,@body)))))))
 
 (declaim (ftype (function (symbol &key (:acceptor-name symbol)) (values (or route null) boolean))
-		easy-routes:find-route))
+                easy-routes:find-route))
 (defun find-route (name &key acceptor-name)
   "Find a route by name (symbol)"
   (let ((routes (if acceptor-name (acceptor-routes acceptor-name)
@@ -313,7 +313,7 @@ with:
   (make-route-url (routes:route-template route) args))
 
 (declaim (ftype (function (symbol &rest t &key &allow-other-keys) (values string &optional))
-		easy-routes:genurl easy-routes:genurl*))
+                easy-routes:genurl easy-routes:genurl*))
 
 (defun genurl (route-symbol &rest args &key &allow-other-keys)
   "Generate a relative url from a route name and arguments"
@@ -398,7 +398,7 @@ ARGS is a property list with route parameters."
   (setf (hunchentoot:content-type*) "application/json")
   (funcall next))
 
-(defun @check (predicate http-error next)
+(defun @check (next predicate http-error)
   "Decorator that checks if PREDICATE evaluation is true.
 PREDICATE is a funcallable object.
 If the check succeeds, then the NEXT middleware is called.
@@ -414,7 +414,7 @@ Example usage:
       (funcall next)
       (http-error http-error)))
 
-(defun @check-permission (predicate next)
+(defun @check-permission (next predicate)
   "Decorator that aborts the current request with a HTTP permission denied error if the evaluation of PREDICATE is false.
 PREDICATE is a funcallable object."
   (if (funcall predicate)
