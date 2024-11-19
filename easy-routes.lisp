@@ -416,6 +416,10 @@ See: https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Accept"
   (setf (hunchentoot:header-out "Accept") accept)
   (funcall next))
 
+(defun @cors (next &key (access-control-allow-origin "*"))
+  (setf (hunchentoot:header-out "Access-Control-Allow-Origin") access-control-allow-origin)
+  (funcall next))
+
 (defun @check (next predicate http-error)
   "Decorator that checks if PREDICATE evaluation is true.
 PREDICATE is a funcallable object.

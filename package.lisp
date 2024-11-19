@@ -23,6 +23,7 @@
    #:@json
    #:@check
    #:@check-permission
+   #:@cors
    ;; HTTP errors
    #:http-error
    #:not-found-error
