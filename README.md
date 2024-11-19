@@ -140,6 +140,10 @@ Decorators also support parameters, like in the `@check` and `@check-permission`
 	...)
 ```
 
+### List of included decorators
+
+- `@content-type`, `@html`, `@json`, `@headers-out`, `@header-out`, `@accept`, `@cors`, `@check`, `@check-permission`.
+
 ## Routes for individual acceptors
 
 By default routes are registered globally in `*ROUTES*` and `*ROUTES-MAPPER*` variables.
