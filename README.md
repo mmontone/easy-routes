@@ -21,6 +21,10 @@ Use `routes-acceptor` acceptor:
 
 Note that the `routes-acceptor` returns with HTTP not found if no route matches and doesn't fallback to `easy-handlers`, and so it doesn't iterate over Hunchentoot `*dispatch-table*`. Most of the time, that iteration is a useful thing, so you may want to start the `easy-routes:easy-routes-acceptor` instead, that inherits from Hunchentoot `easy-acceptor` and so it iterates the dispatch table if no route matches (useful for being able to use `define-easy-handler` and also handling static files).
 
+### Breaking changes
+
+- Commit 9a783af3492b8f7d8ed3ac7b2a720fde71fbc7a2 changes the order of arguments for decorators. There's a good reason for this, to be able for decorators to have optional and key arguments. So from this commit on, the `next` function is passed first.
+
 ## Routes ##
 
 ### Syntax ###
