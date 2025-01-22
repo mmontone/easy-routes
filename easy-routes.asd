@@ -9,6 +9,7 @@
   :serial t
   :components ((:file "package")
                (:file "util")
+               (:file "compute-parameter")
                (:file "easy-routes")
                (:file "routes-map-printer"))
   :depends-on (:hunchentoot :routes))
