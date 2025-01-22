@@ -1,5 +1,9 @@
 (in-package :easy-routes)
 
+;; Hunchentoot's parameter computation does not signal type errors.
+;; This is a rewrite that signals HTTP BAD REQUEST errors when a parameter
+;; with a specified type could not be parsed.
+
 (defun bad-request (message &rest args)
   (setf (tbnl:return-code tbnl:*reply*) tbnl:+http-bad-request+)
   (tbnl:abort-request-handler (apply #'format nil message args)))
