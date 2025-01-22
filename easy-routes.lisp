@@ -11,6 +11,13 @@ Just inspect *routes-mapper* from the Lisp listener to see.")
 
 (defvar *route* nil "The current route")
 
+(defvar *hunchentoot-compute-parameters* nil
+  "If enabled, use Hunchentoot functions for computing parameter types.
+Uses HUNCHENTOOT::CONVERT-PARAMETER implementation for parsing parameters.
+One problem with Hunchentoot implementation is that it does not fail if parameters have wrong types.
+If disabled, then easy-routes handles parameters on its own. It is more strict than Hunchentoot.
+Fails with bad-request HTTP error if the type of the parameters is wrong.")
+
 (defclass routes-acceptor (hunchentoot:acceptor)
   ()
   (:documentation "This acceptors handles routes and only routes. If no route is matched then an HTTP NOT FOUND error is returned.
@@ -162,6 +169,36 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   (declare (ignorable env))
   `(routes::make-variable-template ',(routes::template-data var)))
 
+(defun parameter-computer (parameter-type)
+  "Parameter computer for PARAMETER-TYPE.
+Used when *HUNCHENTOOT-COMPUTE-PARAMETERS* is NIL."
+  (lambda (argument)
+    (if *hunchentoot-compute-parameters*
+        (hunchentoot::convert-parameter argument parameter-type)
+        (case parameter-type
+          (character (or (and (= (length argument) 1) (char argument 0))
+                         (hunchentoot::parameter-error "~s cannot be parsed to a character" argument)))
+          (integer (handler-case (parse-integer argument)
+                     (error ()
+                       (hunchentoot::parameter-error "~s cannot be parsed as integer" argument))))
+          (t (hunchentoot::convert-parameter argument parameter-type))))))
+
+(defun make-defun-parameter (description default-parameter-type default-request-type)
+  "Creates a keyword parameter to be used by DEFINE-EASY-HANDLER.
+DESCRIPTION is one of the elements of DEFINE-EASY-HANDLER's
+LAMBDA-LIST and DEFAULT-PARAMETER-TYPE and DEFAULT-REQUEST-TYPE
+are the global default values."
+  (when (atom description)
+    (setq description (list description)))
+  (destructuring-bind (parameter-name &key (real-name (tbnl::compute-real-name parameter-name))
+                                        parameter-type init-form request-type)
+      description
+    `(,parameter-name (or (and (boundp '*request*)
+                               (compute-parameter ,real-name
+                                                  (parameter-computer ,(or parameter-type default-parameter-type))
+                                                  ,(or request-type default-request-type)))
+                          ,init-form))))
+
 (defmacro defroute (name template-and-options params &body body)
   "Macro for defining a route.
 
@@ -244,17 +281,17 @@ with:
                  (list docstring))
              (let (,@(loop for param in params
                            collect
-                           (hunchentoot::make-defun-parameter param ''string :both))
+                           (make-defun-parameter param ''string :both))
                    ,@(loop for param in get-params
                            collect
-                           (hunchentoot::make-defun-parameter param ''string :get))
+                           (make-defun-parameter param ''string :get))
                    ,@(loop for param in post-params
                            collect
-                           (hunchentoot::make-defun-parameter param ''string :post))
+                           (make-defun-parameter param ''string :post))
                    ,@(loop for param in path-params
                            collect
                            (destructuring-bind (parameter-name parameter-type) param
-                             `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
+                             `(,parameter-name (hunchentoot::convert-parameter ,parameter-name (parameter-computer ,parameter-type))))))
                ,@declarations
                ,@body)))))))
 
