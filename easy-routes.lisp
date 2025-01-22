@@ -193,7 +193,7 @@ are the global default values."
   (destructuring-bind (parameter-name &key (real-name (tbnl::compute-real-name parameter-name))
                                         parameter-type init-form request-type)
       description
-    `(,parameter-name (or (and (boundp '*request*)
+    `(,parameter-name (or (and (boundp 'tbnl:*request*)
                                (compute-parameter ,real-name
                                                   (parameter-computer ,(or parameter-type default-parameter-type))
                                                   ,(or request-type default-request-type)))
