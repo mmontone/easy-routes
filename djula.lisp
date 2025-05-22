@@ -15,6 +15,6 @@
                             ((numberp value) value)
                             (t (djula::resolve-variable-phrase (djula::parse-variable-phrase (princ-to-string value))))))))
       (write-string (apply #'genurl
-                           (intern (symbol-name route) djula::*djula-execute-package*)
+                           (intern (symbol-name route) djula:*template-package*)
                            args)
                     stream))))
