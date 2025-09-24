@@ -162,6 +162,11 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   (declare (ignorable env))
   `(routes::make-variable-template ',(routes::template-data var)))
 
+(defmethod make-load-form ((template routes:uri-component-template) &optional env)
+  (declare (ignore env))
+  `(make-instance ',(class-name (class-of template))
+     :spec ',(routes:template-data template)))
+
 (defmacro defroute (name template-and-options params &body body)
   "Macro for defining a route.
 
