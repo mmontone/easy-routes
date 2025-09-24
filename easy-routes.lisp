@@ -385,40 +385,49 @@ ARGS is a property list with route parameters."
 
 (defun @content-type (next content-type)
   "Sets reply content type to CONTENT-TYPE."
-  (setf (hunchentoot:content-type*) content-type)
-  (funcall next))
+  (prog1
+      (funcall next)
+    (setf (hunchentoot:content-type*) content-type)))
 
 (defun @html (next)
   "HTML decoration. Sets reply content type to text/html"
-  (setf (hunchentoot:content-type*) "text/html")
-  (funcall next))
+  (prog1
+      (funcall next)
+    (setf (hunchentoot:content-type*) "text/html")))
 
-(defun @json (next)
+(defun @json (next &key (accept t))
   "JSON decoration. Sets reply content type to application/json"
-  (setf (hunchentoot:content-type*) "application/json")
-  (funcall next))
+  (prog1
+      (funcall next)
+    (setf (hunchentoot:content-type*) "application/json")
+    (when accept
+      (setf (hunchentoot:header-out "Accept") "application/json"))))
 
 (defun @headers-out (next headers)
   "Send headers out."
-  (mapcan (lambda (header)
-            (setf (hunchentoot:header-out (car header)) (cdr header)))
-          headers)
-  (funcall next))
+  (prog1
+      (funcall next)
+    (mapcan (lambda (header)
+              (setf (hunchentoot:header-out (car header)) (cdr header)))
+            headers)))
 
 (defun @header-out (next header value)
   "Send header out."
-  (setf (hunchentoot:header-out header) value)
-  (funcall next))
+  (prog1
+      (funcall next)
+    (setf (hunchentoot:header-out header) value)))
 
 (defun @accept (next accept)
   "HTTP Accept decorator.
 See: https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Accept"
-  (setf (hunchentoot:header-out "Accept") accept)
-  (funcall next))
+  (prog1
+      (funcall next)
+    (setf (hunchentoot:header-out "Accept") accept)))
 
 (defun @cors (next &key (access-control-allow-origin "*"))
-  (setf (hunchentoot:header-out "Access-Control-Allow-Origin") access-control-allow-origin)
-  (funcall next))
+  (prog1
+      (funcall next)
+    (setf (hunchentoot:header-out "Access-Control-Allow-Origin") access-control-allow-origin)))
 
 (defun @check (next predicate http-error)
   "Decorator that checks if PREDICATE evaluation is true.
