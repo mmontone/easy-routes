@@ -3,7 +3,8 @@
 (require :drakma)
 
 (defpackage :easy-routes-tests
-  (:use :cl :easy-routes))
+  (:use :cl :easy-routes)
+  (:export #:run-tests))
 
 (in-package :easy-routes-tests)
 
