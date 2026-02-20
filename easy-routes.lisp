@@ -167,6 +167,17 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   `(make-instance ',(class-name (class-of template))
                   :spec ',(routes:template-data template)))
 
+(defun check-route-param-type (param-name param-value param-type)
+  "Check the type of route parameter. If incorrect, return with a bad request http error."
+  (unless (typep param-value param-type)
+    (setf (hunchentoot:return-code*) hunchentoot:+http-bad-request+)
+    (hunchentoot:abort-request-handler
+     (format nil "~a should be a ~a" param-name param-type))))
+
+(defun route-param-name (param)
+  (or (getf (cdr param) :real-name)
+      (string-downcase (symbol-name (car param)))))
+
 (defmacro defroute (name template-and-options params &body body)
   "Macro for defining a route.
 
@@ -244,8 +255,9 @@ with:
                    (setf (gethash ',name (getf %routes-and-mapper :routes)) %route))
                 `(setf (gethash ',name *routes*) %route))
            (connect-routes ',acceptor-name)
-           (defun ,name (,@arglist
+           (defun ,name (,@arglist ;; bind route path parameters
                          &aux
+                           ;; bind route query parameters
                            ,@(loop for param in params
                                    collect
                                    (hunchentoot::make-defun-parameter param ''string :both))
@@ -254,14 +266,28 @@ with:
                                    (hunchentoot::make-defun-parameter param ''string :get))
                            ,@(loop for param in post-params
                                    collect
-                                   (hunchentoot::make-defun-parameter param ''string :post))
-                           ,@(loop for param in path-params
-                                   collect
-                                   (destructuring-bind (parameter-name parameter-type) param
-                                     `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
+                                   (hunchentoot::make-defun-parameter param ''string :post)))
              ,@(when docstring
                  (list docstring))
              ,@declarations
+             ;; convert path parameters to their type
+             ,@(loop for param in path-params
+                     when (listp param)
+                       collect
+                       (destructuring-bind (parameter-name parameter-type) param
+                         `(setf ,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type))))
+             ;; when parameter types are specified, check their type
+             ,@(loop for param in path-params
+                     when (listp param)
+                       collect `(check-route-param-type ,(string-downcase (symbol-name (car param)))
+                                                        ,(car param)
+                                                        ,(cadr param)))
+             ,@(loop for param in (append params get-params post-params)
+                     when (getf (cdr param) :parameter-type)
+                       collect `(when (hunchentoot:parameter ,(route-param-name param))
+                                  (check-route-param-type ,(route-param-name param)
+                                                          ,(car param)
+                                                          `(or null ,,(getf (cdr param) :parameter-type)))))
              ,@body))))))
 
 (declaim (ftype (function (symbol &key (:acceptor-name symbol)) (values (or route null) boolean))

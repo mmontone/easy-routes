@@ -46,13 +46,21 @@
   (start-test-service)
   (assert (string= (test-request "integer-param-1/33")
                    "33"))
-  ;; FIXME
-  (assert (test-request "integer-param-1/lala")) ;;; this should signal bad request http error
+  (multiple-value-bind (reply status)
+      (test-request "integer-param-1/lala")
+    (assert (and (string= reply "x should be a INTEGER")
+                 (= status 400))))
   (assert (string= (test-request "integer-param-2/33")
                    "3322"))
-  ;; FIXME
-  (test-request "integer-param-2/foo")
-  ;;; this should signal bad request http error
+  (multiple-value-bind (reply status)
+      (test-request "integer-param-2/foo")
+    (assert (and (string= reply "x should be a INTEGER")
+                 (= status 400))))
+  ;; FIXME: Y value should signal error
+  (multiple-value-bind (reply status)
+      (test-request "integer-param-2/44?Y=lala")
+    (assert (and (string= reply "y should be a INTEGER")
+                 (= status 400))))
   (stop-test-service)
   t)
 
