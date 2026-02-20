@@ -178,6 +178,32 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
   (or (getf (cdr param) :real-name)
       (string-downcase (symbol-name (car param)))))
 
+(defun convert-parameter (argument type)
+  "Version of HUNCHENTOOT::CONVERT-PARAMETER that doesn't ignore errors in type conversion."
+  (flet ((signal-error ()
+           (setf (hunchentoot:return-code*) hunchentoot:+http-bad-request+)
+           (hunchentoot:abort-request-handler
+            (format nil "~a should be a ~a" argument type))))
+    (when (listp argument)
+      ;; this if for the case that ARGUMENT is NIL or the result of a
+      ;; file upload
+      (return-from convert-parameter argument))
+    (handler-case
+        (case type
+          (string argument)
+          (character (or (and (= (length argument) 1)
+                              (char argument 0))
+                         (signal-error)))
+          (integer (or (ignore-errors (parse-integer argument :junk-allowed t))
+                       (signal-error)))
+          (keyword (or (hunchentoot::as-keyword argument :destructivep nil)
+                       (signal-error)))
+          (boolean t)
+          (otherwise (or (funcall type argument)
+                         (signal-error))))
+      (error ()
+        (signal-error)))))
+
 (defmacro defroute (name template-and-options params &body body)
   "Macro for defining a route.
 
@@ -275,7 +301,7 @@ with:
                      when (listp param)
                        collect
                        (destructuring-bind (parameter-name parameter-type) param
-                         `(setf ,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type))))
+                         `(setf ,parameter-name (convert-parameter ,parameter-name ,parameter-type))))
              ;; when parameter types are specified, check their type
              ,@(loop for param in path-params
                      when (listp param)
