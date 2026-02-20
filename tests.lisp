@@ -46,9 +46,13 @@
   (start-test-service)
   (assert (string= (test-request "integer-param-1/33")
                    "33"))
-  (assert (test-request "integer-param-1/lala")) ;;; what should this be??
+  ;; FIXME
+  (assert (test-request "integer-param-1/lala")) ;;; this should signal bad request http error
   (assert (string= (test-request "integer-param-2/33")
                    "3322"))
+  ;; FIXME
+  (test-request "integer-param-2/foo")
+  ;;; this should signal bad request http error
   (stop-test-service)
   t)
 
