@@ -244,24 +244,25 @@ with:
                    (setf (gethash ',name (getf %routes-and-mapper :routes)) %route))
                 `(setf (gethash ',name *routes*) %route))
            (connect-routes ',acceptor-name)
-           (defun ,name ,arglist
+           (defun ,name (,@arglist
+                         &aux
+                           ,@(loop for param in params
+                                   collect
+                                   (hunchentoot::make-defun-parameter param ''string :both))
+                           ,@(loop for param in get-params
+                                   collect
+                                   (hunchentoot::make-defun-parameter param ''string :get))
+                           ,@(loop for param in post-params
+                                   collect
+                                   (hunchentoot::make-defun-parameter param ''string :post))
+                           ,@(loop for param in path-params
+                                   collect
+                                   (destructuring-bind (parameter-name parameter-type) param
+                                     `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
              ,@(when docstring
                  (list docstring))
-             (let (,@(loop for param in params
-                           collect
-                           (hunchentoot::make-defun-parameter param ''string :both))
-                   ,@(loop for param in get-params
-                           collect
-                           (hunchentoot::make-defun-parameter param ''string :get))
-                   ,@(loop for param in post-params
-                           collect
-                           (hunchentoot::make-defun-parameter param ''string :post))
-                   ,@(loop for param in path-params
-                           collect
-                           (destructuring-bind (parameter-name parameter-type) param
-                             `(,parameter-name (hunchentoot::convert-parameter ,parameter-name ,parameter-type)))))
-               ,@declarations
-               ,@body)))))))
+             ,@declarations
+             ,@body))))))
 
 (declaim (ftype (function (symbol &key (:acceptor-name symbol)) (values (or route null) boolean))
                 easy-routes:find-route))
