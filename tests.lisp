@@ -51,4 +51,4 @@
   (stop-test-service)
   t)
 
-;; (run-tests)
+(run-tests)
