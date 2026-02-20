@@ -22,7 +22,7 @@
      :acceptor-name easy-routes-tests)
     (&path (x 'integer) &get (y :real-name "Y" :init-form 22 :parameter-type 'integer))
   (assert (typep x 'integer))
-  (assert (typep y 'integer))
+  (assert (typep y '(or null integer)))
   (concatenate 'string (prin1-to-string x) (prin1-to-string y)))
 
 (defvar *test-service* nil)
