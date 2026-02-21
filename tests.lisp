@@ -60,6 +60,13 @@
     ()
   "post")
 
+(easy-routes:defroute get-params-test-1
+    ("/tests/get-params-1/:path"
+     :method :get
+     :acceptor-name easy-routes-tests)
+    (x &get y z)
+  (princ-to-string (list path x y z)))
+
 (defvar *test-service* nil)
 
 (defun start-test-service ()
@@ -82,6 +89,12 @@
 
 (defun run-tests ()
   (start-test-service)
+
+  (assert (equalp (read-from-string (test-request "get-params-1/foo"))
+                  '(foo nil nil nil)))
+  (assert (equalp (read-from-string (test-request "get-params-1/foo?x=x&y=y"))
+                  '(foo x y nil)))
+  
   (assert (string= (test-request "integer-param-1/33")
                    "33"))
   (multiple-value-bind (reply status)
