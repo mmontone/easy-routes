@@ -25,6 +25,27 @@
   (assert (typep y '(or null integer)))
   (concatenate 'string (prin1-to-string x) (prin1-to-string y)))
 
+(easy-routes:defroute array-param-test
+    ("/tests/array-param"
+     :method :get
+     :acceptor-name easy-routes-tests)
+    (&get (x :parameter-type '(array string)))
+  (princ-to-string x))
+
+(easy-routes:defroute list-param-test
+    ("/tests/list-param"
+     :method :get
+     :acceptor-name easy-routes-tests)
+    (&get (x :parameter-type '(list string)))
+  (princ-to-string x))
+
+(easy-routes:defroute hash-param-test
+    ("/tests/hash-param"
+     :method :get
+     :acceptor-name easy-routes-tests)
+    (&get (x :parameter-type '(hash-table string)))
+  (princ-to-string x))
+
 (defvar *test-service* nil)
 
 (defun start-test-service ()
@@ -61,6 +82,13 @@
       (test-request "integer-param-2/44?Y=lala")
     (assert (and (string= reply "Y should be a INTEGER")
                  (= status 400))))
+  #+fixme
+  (let ((puri:*strict-parse* nil))
+    (test-request "array-param?x[0]=foo&x[1]=bar&x[2]=baz"))
+  (assert (string= (test-request "list-param?x=foo&x=bar&x=baz")
+                   "(foo bar baz)"))
+  #+fixme(let ((puri:*strict-parse* nil))
+           (test-request "hash-param?x{foo}=bar"))
   (stop-test-service)
   t)
 
