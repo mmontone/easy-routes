@@ -131,8 +131,8 @@
   #+fixme
   (let ((puri:*strict-parse* nil))
     (test-request "array-param?x[0]=foo&x[1]=bar&x[2]=baz"))
-  (assert (string= (test-request "list-param?x=foo&x=bar&x=baz")
-                   "(foo bar baz)"))
+  (assert (equalp (read-from-string (test-request "list-param?x=foo&x=bar&x=baz"))
+                  '(foo bar baz)))
   #+fixme(let ((puri:*strict-parse* nil))
            (test-request "hash-param?x{foo}=bar"))
 
