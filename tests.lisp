@@ -46,6 +46,20 @@
     (&get (x :parameter-type '(hash-table string)))
   (princ-to-string x))
 
+(easy-routes:defroute get-http-method-test
+    ("/tests/get-http-method"
+     :method :get
+     :acceptor-name easy-routes-tests)
+    ()
+  "get")
+
+(easy-routes:defroute post-http-method-test
+    ("/tests/post-http-method"
+     :method :post
+     :acceptor-name easy-routes-tests)
+    ()
+  "post")
+
 (defvar *test-service* nil)
 
 (defun start-test-service ()
@@ -62,6 +76,9 @@
                  (hunchentoot:acceptor-port *test-service*)
                  test-path)
          args))
+
+(defmacro http-status (exp)
+  `(second (multiple-value-list ,exp)))
 
 (defun run-tests ()
   (start-test-service)
@@ -89,6 +106,17 @@
                    "(foo bar baz)"))
   #+fixme(let ((puri:*strict-parse* nil))
            (test-request "hash-param?x{foo}=bar"))
+
+  ;; http method tests
+
+  (assert (string= (test-request "get-http-method") "get"))
+  (assert (= (http-status (test-request "get-http-method" :method :post))
+             404))
+
+  (assert (string= (test-request "post-http-method" :method :post) "post"))
+  (assert (= (http-status (test-request "post-http-method"))
+             404))
+  
   (stop-test-service)
   t)
 
