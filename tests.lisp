@@ -67,6 +67,13 @@
     (x &get y z)
   (princ-to-string (list path x y z)))
 
+(easy-routes:defroute post-params-test-1
+    ("/tests/post-params-1/:path"
+     :method :post
+     :acceptor-name easy-routes-tests)
+    (x &post y z)
+  (princ-to-string (list path x y z)))
+
 (defvar *test-service* nil)
 
 (defun start-test-service ()
@@ -94,6 +101,15 @@
                   '(foo nil nil nil)))
   (assert (equalp (read-from-string (test-request "get-params-1/foo?x=x&y=y"))
                   '(foo x y nil)))
+
+  (assert (equalp
+           (read-from-string (test-request "post-params-1/foo" :method :post))
+           '(foo nil nil nil)))
+  (assert (equalp
+           (read-from-string (test-request "post-params-1/foo" :method :post
+                                                               :parameters '(("x" . "x")
+                                                                             ("y" . "y"))))
+           '(foo x y nil)))
   
   (assert (string= (test-request "integer-param-1/33")
                    "33"))
