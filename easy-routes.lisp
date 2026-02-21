@@ -204,6 +204,27 @@ If you want to use Hunchentoot easy-handlers dispatch as a fallback, use EASY-RO
       (error ()
         (signal-error)))))
 
+(defun make-defun-parameter (description default-parameter-type default-request-type)
+  "Creates a keyword parameter to be used by DEFINE-EASY-HANDLER.
+DESCRIPTION is one of the elements of DEFINE-EASY-HANDLER's
+LAMBDA-LIST and DEFAULT-PARAMETER-TYPE and DEFAULT-REQUEST-TYPE
+are the global default values."
+  (when (atom description)
+    (setq description (list description)))
+  (destructuring-bind (parameter-name &key (real-name (hunchentoot::compute-real-name parameter-name))
+                                        parameter-type init-form request-type)
+      description
+    (let ((parameter-reader (case (or request-type default-request-type)
+                              (:both 'hunchentoot:parameter)
+                              (:get 'hunchentoot:get-parameter)
+                              (:post 'hunchentoot:post-parameter))))
+      `(,parameter-name (if (and (boundp 'hunchentoot:*request*)
+                                 (,parameter-reader ,real-name))
+                            (hunchentoot::compute-parameter ,real-name
+                                                            ,(or parameter-type default-parameter-type)
+                                                            ,(or request-type default-request-type))
+                            ,init-form)))))
+
 (defmacro defroute (name template-and-options params &body body)
   "Macro for defining a route.
 
@@ -286,13 +307,13 @@ with:
                            ;; bind route query parameters
                            ,@(loop for param in params
                                    collect
-                                   (hunchentoot::make-defun-parameter param ''string :both))
+                                   (make-defun-parameter param ''string :both))
                            ,@(loop for param in get-params
                                    collect
-                                   (hunchentoot::make-defun-parameter param ''string :get))
+                                   (make-defun-parameter param ''string :get))
                            ,@(loop for param in post-params
                                    collect
-                                   (hunchentoot::make-defun-parameter param ''string :post)))
+                                   (make-defun-parameter param ''string :post)))
              ,@(when docstring
                  (list docstring))
              ,@declarations
@@ -309,12 +330,11 @@ with:
                                                         ,(car param)
                                                         ,(cadr param)))
              ,@(loop for param in (append params get-params post-params)
-                     when (and (getf (cdr param) :parameter-type)
-                               (atom (getf (cdr param) :parameter-type)))
+                     when (and (getf (cdr param) :parameter-type))
                        collect `(when (hunchentoot:parameter ,(route-param-name param))
                                   (check-route-param-type ,(route-param-name param)
                                                           ,(car param)
-                                                          `(or null ,,(getf (cdr param) :parameter-type)))))
+                                                          ,(getf (cdr param) :parameter-type))))
              ,@body))))))
 
 (declaim (ftype (function (symbol &key (:acceptor-name symbol)) (values (or route null) boolean))
