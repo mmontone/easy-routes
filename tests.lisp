@@ -46,6 +46,13 @@
     (&get (x :parameter-type '(hash-table string)))
   (princ-to-string x))
 
+(easy-routes:defroute init-form-parm-test
+    ("/tests/init-form-param"
+     :method :get
+     :acceptor-name easy-routes-tests)
+    (&get (x :init-form "foo"))
+  x)
+
 (easy-routes:defroute get-http-method-test
     ("/tests/get-http-method"
      :method :get
@@ -110,7 +117,7 @@
                                                                :parameters '(("x" . "x")
                                                                              ("y" . "y"))))
            '(foo x y nil)))
-  
+
   (assert (string= (test-request "integer-param-1/33")
                    "33"))
   (multiple-value-bind (reply status)
@@ -136,6 +143,9 @@
   #+fixme(let ((puri:*strict-parse* nil))
            (test-request "hash-param?x{foo}=bar"))
 
+  (assert (string= (test-request "init-form-param") "foo"))
+  (assert (string= (test-request "init-form-param?x=bar") "bar"))
+
   ;; http method tests
 
   (assert (string= (test-request "get-http-method") "get"))
@@ -145,7 +155,7 @@
   (assert (string= (test-request "post-http-method" :method :post) "post"))
   (assert (= (http-status (test-request "post-http-method"))
              404))
-  
+
   (stop-test-service)
   t)
 
